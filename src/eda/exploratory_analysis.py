@@ -87,3 +87,22 @@ class ExploratoryAnalysis:
         except Exception as e:
             logger.error("Average order value calculation failed.")
             raise CustomException(e, sys)
+
+    def calculate_customer_metrics(self,df:pd.DataFrame):
+        try:
+            logger.info(" Calculating Customer metrics.")
+            df_customer = df.dropna(subset=['Customer ID']).copy()
+
+            unique_customers = df_customer['Customer ID'].nunique()
+            orders_per_customer = (df_customer.groupby('Customer ID')['Invoice'].nunique())
+            spending_per_customer = (df_customer.groupby('Customer ID')['Revenue'].sum())
+            average_order_value_per_customer = (spending_per_customer/orders_per_customer)
+
+            report = {"unique_customers" : unique_customers , 'average_orders_per_customer' : orders_per_customer.mean(),'average_spending_per_customer':spending_per_customer.mean(),'average_order_value_per_customer' : average_order_value_per_customer.mean()}
+
+            logger.info(f"metrics report : {report}")
+            return report
+        
+        except Exception as e:
+            logger.error("Customer metrics failed.")
+            raise CustomException(e,sys)

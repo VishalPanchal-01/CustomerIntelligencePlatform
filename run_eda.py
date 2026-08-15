@@ -22,3 +22,6 @@ print(eda.calculate_order_metrics(df))
 
 print("\nAverage order value:")
 print(eda.calculate_average_order_value(df))
+
+print("\nCustomer metrics:")
+print(eda.calculate_customer_metrics(df))

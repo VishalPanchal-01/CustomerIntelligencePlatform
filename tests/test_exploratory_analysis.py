@@ -52,3 +52,38 @@ def test_eda():
     assert average_order_value is not None
 
     assert average_order_value >= 0
+
+
+        # Customer metrics
+
+    customer_metrics = (
+        eda.calculate_customer_metrics(df)
+    )
+
+    assert customer_metrics is not None
+
+    assert (
+        "unique_customers"
+        in customer_metrics
+    )
+
+    assert (
+        "average_orders_per_customer"
+        in customer_metrics
+    )
+
+    assert (
+        "average_spending_per_customer"
+        in customer_metrics
+    )
+
+    assert (
+        "average_order_value_per_customer"
+        in customer_metrics
+    )
+
+    assert (
+        customer_metrics[
+            "unique_customers"
+        ] > 0
+    )
