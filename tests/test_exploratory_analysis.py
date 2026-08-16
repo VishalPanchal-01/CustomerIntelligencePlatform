@@ -1,6 +1,7 @@
 from src.eda.exploratory_analysis import (
     ExploratoryAnalysis
 )
+import pandas as pd
 
 
 def test_eda():
@@ -86,4 +87,136 @@ def test_eda():
         customer_metrics[
             "unique_customers"
         ] > 0
+    )
+
+
+        # Date preparation
+
+    df = eda.prepare_date_column(df)
+
+    assert (
+        pd.api.types.is_datetime64_any_dtype(
+            df["InvoiceDate"]
+        )
+    )
+
+    # Monthly revenue
+
+    monthly_revenue = (
+        eda.calculate_monthly_revenue(df)
+    )
+
+    assert monthly_revenue is not None
+    assert not monthly_revenue.empty
+
+    # Monthly orders
+
+    monthly_orders = (
+        eda.calculate_monthly_orders(df)
+    )
+
+    assert monthly_orders is not None
+    assert not monthly_orders.empty
+
+    # Monthly customers
+
+    monthly_customers = (
+        eda.calculate_monthly_customers(df)
+    )
+
+    assert monthly_customers is not None
+    assert not monthly_customers.empty
+
+
+        # Country metrics
+
+    country_metrics = (
+        eda.calculate_country_metrics(df)
+    )
+
+    assert country_metrics is not None
+
+    assert (
+        "customers_per_country"
+        in country_metrics
+    )
+
+    assert (
+        "orders_per_country"
+        in country_metrics
+    )
+
+    assert (
+        "revenue_per_country"
+        in country_metrics
+    )
+
+    assert (
+        not country_metrics[
+            "customers_per_country"
+        ].empty
+    )
+
+    assert (
+        not country_metrics[
+            "orders_per_country"
+        ].empty
+    )
+
+    assert (
+        not country_metrics[
+            "revenue_per_country"
+        ].empty
+    )
+
+
+        # Country revenue share
+
+    revenue_share = (eda.calculate_country_revenue_share(df))
+
+    assert revenue_share is not None
+
+    assert not revenue_share.empty
+
+
+
+        # Product metrics
+
+    product_metrics = (
+        eda.calculate_product_metrics(df)
+    )
+
+    assert product_metrics is not None
+
+    assert (
+        "unique_products"
+        in product_metrics
+    )
+
+    assert (
+        "quantity_per_product"
+        in product_metrics
+    )
+
+    assert (
+        "revenue_per_product"
+        in product_metrics
+    )
+
+    assert (
+        product_metrics[
+            "unique_products"
+        ] > 0
+    )
+
+    assert (
+        not product_metrics[
+            "quantity_per_product"
+        ].empty
+    )
+
+    assert (
+        not product_metrics[
+            "revenue_per_product"
+        ].empty
     )
