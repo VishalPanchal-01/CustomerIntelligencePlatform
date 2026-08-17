@@ -71,6 +71,16 @@ print(product_metrics["revenue_per_product"].head(10))
 
 print("\nTop 10 products by revenue share:")
 product_revenue_share = (eda.calculate_product_revenue_share(df))
-
 print(product_revenue_share.head(10))
+
+print("\nCancellation metrics:")
+cancellation_metrics = (eda.calculate_cancellation_metrics(df))
+print(cancellation_metrics)
+
+print("\nReturn metrics:")
+return_metrics = (eda.calculate_return_metrics(df))
+print(return_metrics)
+
+print("\nCancellation rate:")
+print(eda.calculate_cancellation_rate(df))
 

@@ -220,3 +220,97 @@ def test_eda():
             "revenue_per_product"
         ].empty
     )
+
+
+
+        # Cancellation metrics
+
+    cancellation_metrics = (
+        eda.calculate_cancellation_metrics(df)
+    )
+
+    assert cancellation_metrics is not None
+
+    assert (
+        "cancellation_invoices"
+        in cancellation_metrics
+    )
+
+    assert (
+        "cancellation_rows"
+        in cancellation_metrics
+    )
+
+    assert (
+        "cancellation_quantity"
+        in cancellation_metrics
+    )
+
+    assert (
+        "cancellation_revenue"
+        in cancellation_metrics
+    )
+
+
+    # Return metrics
+
+    return_metrics = (
+        eda.calculate_return_metrics(df)
+    )
+
+    assert return_metrics is not None
+
+    assert (
+        "return_rows"
+        in return_metrics
+    )
+
+    assert (
+        "returned_quantity"
+        in return_metrics
+    )
+
+    assert (
+        "return_revenue"
+        in return_metrics
+    )
+
+
+    # Cancellation rate
+
+    cancellation_rate = (
+        eda.calculate_cancellation_rate(df)
+    )
+
+    assert cancellation_rate is not None
+
+    assert cancellation_rate >= 0
+
+    assert cancellation_rate <= 100
+
+
+    # Customer return metrics
+
+    customer_return_metrics = (
+        eda.calculate_customer_return_metrics(df)
+    )
+
+    assert (
+        customer_return_metrics
+        is not None
+    )
+
+    assert (
+        "returns_per_customer"
+        in customer_return_metrics
+    )
+
+    assert (
+        "returned_quantity_per_customer"
+        in customer_return_metrics
+    )
+
+    assert (
+        "return_revenue_per_customer"
+        in customer_return_metrics
+    )

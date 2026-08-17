@@ -232,3 +232,87 @@ class ExploratoryAnalysis:
         except Exception as e:
             logger.error("Product revenue share calculation failed.")
             raise CustomException(e, sys)    
+
+    def calculate_cancellation_metrics(self,df:pd.DataFrame):
+        try:
+            logger.info("Starting calculate cancellation metrics.")
+            cancellation_mask = (df['Invoice'].astype(str).str.startswith('C'))
+            cancellation_df = df[cancellation_mask].copy()
+            cancellation_invoices = (cancellation_df['Invoice'].nunique())
+            cancellation_rows = (len(cancellation_df))
+            cancellation_quantity = (cancellation_df['Quantity'].sum())
+            cancellation_revenue = (cancellation_df['Revenue'].sum())
+
+            report = {'cancellation_invoices' : cancellation_invoices , 'cancellation_rows':cancellation_rows , 'cancellation_quantity' : cancellation_quantity , 'cancellation_revenue': cancellation_revenue}
+
+            logger.info("cancellation metrics calculated successfully.")
+
+            return report
+        
+
+        except Exception as e:
+            logger.error("cancellation metrics failed.")
+            raise CustomException(e,sys)        
+
+    def calculate_return_metrics(self,df:pd.DataFrame):
+        try:
+            logger.info("Starting calculate return metrics.")
+            return_df = df[df['Quantity']<0].copy()
+
+            return_rows = (len(return_df))
+            returned_quantity = (return_df['Quantity'].sum())
+            return_revenue = (return_df['Revenue'].sum())
+
+            report = {'return_rows' : return_rows , 'returned_quantity' : returned_quantity,
+                    'return_revenue':return_revenue}
+
+            logger.info("Return metrics calculated successfully.")
+
+            return report
+        
+        except Exception as e:
+            logger.error("Return metrics failed.")
+            raise CustomException(e,sys)    
+
+    def calculate_cancellation_rate(self,df:pd.DataFrame):
+        try:
+            logger.info("start calculating cancellation rate.")
+            total_invoices = (df['Invoice'].nunique())
+
+            cancellation_mask = (df['Invoice'].astype(str).str.startswith('C'))
+
+            cancellation_invoices = (df.loc[cancellation_mask,'Invoice'].nunique())
+
+            if total_invoices == 0:
+                return 0
+
+            cancellation_rate = (cancellation_invoices/total_invoices) * 100
+
+            logger.info(f"cancellation_rate : {cancellation_rate}")
+
+            return cancellation_rate
+        
+        except Exception as e:
+            logger.error("cancellation rate failed.")
+            raise CustomException(e,sys)    
+
+    def calculate_customer_return_metrics(self,df: pd.DataFrame):
+        try:
+            logger.info("Calculating customer return metrics.")
+            return_df = df[(df["Quantity"] < 0) &(df["Customer ID"].notna())].copy()
+            returns_per_customer = (return_df.groupby("Customer ID").size().sort_values(ascending=False))
+
+            returned_quantity_per_customer = (return_df.groupby("Customer ID")["Quantity"].sum().sort_values())
+
+            return_revenue_per_customer = (return_df.groupby("Customer ID")["Revenue"].sum().sort_values())
+
+            report = {"returns_per_customer": returns_per_customer,"returned_quantity_per_customer": returned_quantity_per_customer,
+            "return_revenue_per_customer":return_revenue_per_customer}
+
+            logger.info("Customer return metrics calculated.")
+
+            return report
+
+        except Exception as e:
+            logger.error("Customer return metrics calculation failed.")
+            raise CustomException(e, sys)    
