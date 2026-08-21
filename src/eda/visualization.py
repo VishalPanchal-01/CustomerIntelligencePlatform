@@ -5,7 +5,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from src.config.config import ProjectConfig
 from src.utils.logger import logger
 from src.utils.exception import CustomException
 
@@ -26,7 +25,7 @@ class EDAVisualization:
             plt.xticks(rotation=45)
             plt.tight_layout()
 
-            file_path = os.path.join(self.figure_dir,'monthly_rebenue.png')
+            file_path = os.path.join(self.figure_dir,'monthly_revenue.png')
             plt.savefig(file_path)
             plt.close()
             logger.info(f"Monthly Revenue plot saved : {file_path}")
@@ -80,48 +79,6 @@ class EDAVisualization:
             logger.error("Monthly customers plot failed.")
             raise CustomException(e,sys)
         
-    def calculate_monthly_orders(self,monthly_orders:pd.Series):
-        try:
-            logger.info("calculating monthly order plot.")
-            plt.figure(figsize=(12,6))
-            monthly_orders.plot(kind='line',marker='o')
-            plt.title("Monthle orders")
-            plt.xlabel('Month')
-            plt.ylabel('No. of orders')
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            file_path = os.path.join(self.figure_dir,"monthly_orders.png")
-            plt.savefig(file_path)
-            plt.close()
-            logger.info(f"Monthly order plot saved : {file_path}")
-
-            return file_path
-        
-        except Exception as e:
-            logger.error("Monthly order plot failed.")
-            raise CustomException(e,sys)   
-
-    def calculate_monthly_customers(self,monthly_customers:pd.Series):
-        try:
-            logger.info("calculating monthly customer plot.")
-            plt.figure(figsize=(12,6))
-            monthly_customers.plot(kind='line',marker='o')
-            plt.title("Monthly Active customers")
-            plt.xlabel("Month")
-            plt.ylabel("No. of customers")
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            file_path = os.path.join(self.figure_dir,"monthly_customers.png")
-            plt.savefig(file_path)
-            plt.close()
-            logger.info(f"Monthly customer plot saved : {file_path}")
-
-            return file_path
-        
-        except Exception as e:
-            logger.error("Monthly customer plot failed.")
-            raise CustomException(e,sys)    
-
     def plot_revenue_distribution(self,df:pd.DataFrame):
         try:
             logger.info("Plotting revenue distribution.")
@@ -170,10 +127,10 @@ class EDAVisualization:
             logger.info("plotting top countries by revenue.")
             country_revenue = (df.groupby('Country')['Revenue'].sum().sort_values(ascending=False).head(top_n))
             plt.figure(figsize=(10,6))
-            country_revenue.sort_values().plot(kind="bar")
+            country_revenue.sort_values().plot(kind="barh")
             plt.title(f"Top {top_n} countries by revenue")
-            plt.xlabel("Revenue")
-            plt.ylabel("Country")
+            plt.xlabel("Country")
+            plt.ylabel("Revenue")
             plt.tight_layout()
 
             file_path = os.path.join(self.figure_dir,"top_countries_by_revenue.png")
@@ -208,4 +165,48 @@ class EDAVisualization:
         except Exception as e:
             logger.error("Top products plot failed.")
             raise CustomException(e,sys)
-            
+
+    def plot_top_customers_by_spending(self,df:pd.DataFrame , top_n : int=10):
+        try:
+            logger.info("Creating plot of top customer by spendings.")
+
+            customer_spending = (df.dropna(subset=['Customer ID']).groupby('Customer ID')['Revenue'].sum().sort_values(ascending=False).head(top_n))
+            plt.figure(figsize=(10,6))
+            customer_spending.plot(kind="barh")
+            plt.title("Top customers by spending")
+            plt.xlabel('Total Spending')
+            plt.ylabel('Customer ID')
+            plt.tight_layout()
+
+            file_path = os.path.join(self.figure_dir,"top_customer_by_spending.png")
+            plt.savefig(file_path)
+            plt.close()
+
+            logger.info("Top customer by spending plot saved.")
+            return file_path
+
+        except Exception as e:
+            logger.error("Top customer spending plot failed.")    
+            raise CustomException(e,sys)    
+
+    def plot_customer_order_frequency(self,df:pd.DataFrame):
+        try:
+            logger.info("plotting customer order frequency.")
+            customer_order = (df.dropna(subset=['Customer ID']).groupby('Customer ID')['Invoice'].nunique())
+            plt.figure(figsize=(10,6))
+            customer_order.hist(bins=30)
+            plt.title("Customer order frequency Distribution.")
+            plt.xlabel("Number of orders")
+            plt.ylabel('Number of customers')
+            plt.tight_layout()
+
+            file_path = os.path.join(self.figure_dir,"customer_order_frequency.png")
+            plt.savefig(file_path)
+            plt.close()
+
+            logger.info("customer order frequency plot saved")
+            return file_path
+        
+        except Exception as e:
+            logger.error("plotting customer order frequency failed.")
+            raise CustomException(e,sys)    
