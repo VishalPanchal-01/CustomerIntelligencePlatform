@@ -1,0 +1,4 @@
+Customer ID,Recency,Frequency,Monetary,AverageOrderValue,Tenure,Churn
+101,17,2,300,150.0,31,1
+102,12,2,400,200.0,27,1
+103,7,2,400,200.0,22,1
