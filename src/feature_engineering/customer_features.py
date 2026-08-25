@@ -6,14 +6,13 @@ from src.utils.logger import logger
 
 
 class CustomerFeatureEngineering:
-    def create_customer_features(self,df: pd.DataFrame) -> pd.DataFrame:
+    def create_customer_features(self,df: pd.DataFrame ,reference_date:pd.Timestamp ) -> pd.DataFrame:
         try:
             logger.info("Starting customer feature engineering.")
             data = df.copy()
             data["InvoiceDate"] = pd.to_datetime(data["InvoiceDate"],errors="coerce")
             
             data = data.dropna(subset=["InvoiceDate"])
-            reference_date = (data["InvoiceDate"].max())
             logger.info(f"Reference date: {reference_date}")
 
             first_purchase = (data.groupby("Customer ID")["InvoiceDate"].min())

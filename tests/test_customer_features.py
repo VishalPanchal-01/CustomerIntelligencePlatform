@@ -15,7 +15,9 @@ def test_customer_feature_engineering():
     })
 
     feature_engineering = (CustomerFeatureEngineering())
-    result = (feature_engineering.create_customer_features(df))
+    reference_date = pd.Timestamp("2011-02-01")
+
+    result = (feature_engineering.create_customer_features(df,reference_date))
 
     assert result is not None
     assert len(result) == 2
