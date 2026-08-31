@@ -19,6 +19,7 @@ class ChurnTargetCreation:
 
             logger.info(f"dataset_end_date : {dataset_end_date}")
             logger.info(f"observation cutoff : {observation_cutoff}")
+            
             observation_data = (data[data['InvoiceDate']<=observation_cutoff].copy())
             prediction_data = (data[data['InvoiceDate']>observation_cutoff].copy())
             observation_customers = set(observation_data['Customer ID'].dropna().unique())
