@@ -53,3 +53,23 @@ def test_analyze_feature_statistics():
     assert result.loc["Recency","median"] == 20
     assert result.loc["Frequency","mean"] == 2
     assert result.loc["Monetary","max"] == 300
+
+
+def test_analyze_correlation():
+    df = pd.DataFrame({
+        "Recency": [10,20,30,40],
+        "Frequency": [4,3,2,1],
+        "Monetary": [400,300,200,100],
+        "TotalItems": [40,30,20,10],
+        "AverageOrderValue": [100,100,100,100],
+        "Tenure": [200,150,100,50],
+        "Churn": [0,0,1,1]
+        })
+
+    analyzer = ChurnAnalysis()
+    result = (analyzer.analyze_correlation(df))
+
+    assert result is not None
+    assert (result.shape==(7, 7))
+    assert (result.loc["Recency","Recency"]== 1)
+    assert (result.loc["Frequency","Monetary"]> 0)    

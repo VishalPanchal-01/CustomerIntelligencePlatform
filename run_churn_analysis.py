@@ -19,5 +19,11 @@ def main():
     print(statistics)
 
 
+    correlation = (analyzer.analyze_correlation(df))
+
+    print("\nCorrelation Matrix:")
+    print(correlation)
+
+
 if __name__ == "__main__":
     main()

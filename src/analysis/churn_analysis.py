@@ -51,3 +51,16 @@ class ChurnAnalysis:
         except Exception as e:
             logger.error("Feature statistics analysis failed.")
             raise CustomException(e,sys)        
+
+    def analyze_correlation(self,df:pd.DataFrame) -> pd.DataFrame:
+        try:
+            logger.info("Analyze feature correlations.")
+            features = ['Recency','Frequency','Monetary','TotalItems','AverageOrderValue','Tenure','Churn']
+
+            correlation_matrix = (df[features].corr())
+            logger.info(f"correlation matrix : /n {correlation_matrix}")
+            return correlation_matrix
+        
+        except Exception as e:
+            logger.error("analyzed correlation failed.")
+            raise CustomException(e,sys)
