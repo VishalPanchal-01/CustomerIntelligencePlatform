@@ -38,3 +38,16 @@ class ChurnAnalysis:
         except Exception as e:
             logger.error("feature by churn analysis failed.")
             raise CustomException(e,sys)    
+
+    def analyze_feature_statistics(self, df:pd.DataFrame) -> pd.DataFrame:
+        try:
+            logger.info("Analyzing feature statistics.")
+            features = ['Recency','Frequency','Monetary','TotalItems','AverageOrderValue','Tenure']
+
+            statistics = (df[features].agg(['mean','median','std','min','max']).T)
+            logger.info(f"Feature Statistics : \n {statistics}")
+            return statistics
+        
+        except Exception as e:
+            logger.error("Feature statistics analysis failed.")
+            raise CustomException(e,sys)        

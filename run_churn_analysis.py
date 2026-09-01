@@ -14,6 +14,10 @@ def main():
     print("\nFeature Summary by Churn:")
     print(feature_summary)    
 
+    statistics = (analyzer.analyze_feature_statistics(df))
+    print("\nFeature Statistics:")
+    print(statistics)
+
 
 if __name__ == "__main__":
     main()

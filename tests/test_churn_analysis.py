@@ -34,3 +34,22 @@ def test_analyze_feature_by_churn():
     assert result.loc[1,"Recency"] == 110
     assert result.loc[0,"Frequency"] == 6
     assert result.loc[1,"Frequency"] == 1.5
+
+
+def test_analyze_feature_statistics():
+    df = pd.DataFrame({
+            "Recency": [10,20,30],
+            "Frequency": [1,2,3],
+            "Monetary": [100,200,300],
+            "TotalItems": [10,20,30],
+            "AverageOrderValue": [100,100,100],
+            "Tenure": [50,100,150]
+        })
+
+    analyzer = ChurnAnalysis()
+    result = (analyzer.analyze_feature_statistics(df))
+    assert result is not None
+    assert result.loc["Recency","mean"] == 20
+    assert result.loc["Recency","median"] == 20
+    assert result.loc["Frequency","mean"] == 2
+    assert result.loc["Monetary","max"] == 300
