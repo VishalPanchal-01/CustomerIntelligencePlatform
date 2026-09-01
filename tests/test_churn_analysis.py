@@ -73,3 +73,25 @@ def test_analyze_correlation():
     assert (result.shape==(7, 7))
     assert (result.loc["Recency","Recency"]== 1)
     assert (result.loc["Frequency","Monetary"]> 0)    
+
+def test_analyze_feature_quality():
+    df = pd.DataFrame({
+        "Customer ID": [101,102,103],
+        "Recency": [10,20,30],
+        "Frequency": [2,3,1],
+        "Monetary": [200,300,100],
+        "TotalItems": [20,30,10],
+        "AverageOrderValue": [100,100,100],
+        "Tenure": [50,100,20],
+        "Churn": [0,1,1]
+        })
+
+    analyzer = ChurnAnalysis()
+
+    result = (analyzer.analyze_churn_quality(df))
+    assert result is not None
+    assert (result["missing_values"].sum()== 0)
+    assert (result["infinite_values"].sum()== 0)
+    assert (result["duplicate_customers"]== 0)
+    assert (result["invalid_churn_labels"]== 0)
+    assert all(value == 0 for value in result["negative_values"].values())    

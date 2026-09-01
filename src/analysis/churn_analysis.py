@@ -64,3 +64,34 @@ class ChurnAnalysis:
         except Exception as e:
             logger.error("analyzed correlation failed.")
             raise CustomException(e,sys)
+
+    def analyze_churn_quality(self,df:pd.DataFrame) -> pd.DataFrame:
+        try:
+            logger.info("Analyzing feature Quality.")
+            features = ['Recency','Frequency','Monetary','TotalItems','AverageOrderValue','Tenure']
+
+            missing_values = (df[features + ['Churn']].isnull().sum())
+            numeric_data = (df[features].select_dtypes(include='number'))
+            infinite_values = (numeric_data.isin([float('-inf'),float('inf')]).sum())
+            duplicate_customers = (df['Customer ID'].duplicated().sum())
+
+            negative_values = {}
+            for feature in features:
+                negative_values[feature] = (df[feature]<0).sum()
+
+            invalid_churn_labels = (~df['Churn'].isin([0,1])).sum()
+
+            report = {
+            "missing_values": missing_values,
+            "infinite_values": infinite_values,
+            "duplicate_customers": duplicate_customers,
+            "negative_values": negative_values,
+            "invalid_churn_labels": invalid_churn_labels
+            }
+
+            logger.info(f"Feature quality report:\n {report}")
+            return report    
+
+        except Exception as e:
+            logger.error("churn quality analysis failed.")
+            raise CustomException(e,sys)    

@@ -25,5 +25,26 @@ def main():
     print(correlation)
 
 
+    quality_report = (analyzer.analyze_churn_quality(df))
+
+    print("\nFeature Quality Report:")
+
+    print("\nMissing Values:")
+
+    print(quality_report["missing_values"])
+
+    print("\nInfinite Values:")
+
+    print(quality_report["infinite_values"])
+    print("\nDuplicate Customers:")
+    print(quality_report["duplicate_customers"])
+
+    print("\nNegative Values:")
+
+    print(quality_report["negative_values"])
+
+    print("\nInvalid Churn Labels:")
+    print(quality_report["invalid_churn_labels"])
+
 if __name__ == "__main__":
     main()
