@@ -95,3 +95,22 @@ def test_analyze_feature_quality():
     assert (result["duplicate_customers"]== 0)
     assert (result["invalid_churn_labels"]== 0)
     assert all(value == 0 for value in result["negative_values"].values())    
+
+
+def test_analyze_feature_skewness():
+    df = pd.DataFrame({
+            "Recency": [10,20,30,100],
+            "Frequency": [1,2,3,20],
+            "Monetary": [100,200,300,5000],
+            "TotalItems": [10,20,30,500],
+            "AverageOrderValue": [100,110,120,1000],
+            "Tenure": [10,20,30,100]
+        })
+
+    analyzer = ChurnAnalysis()
+    result = (analyzer.analyze_feature_skewness(df))
+
+    assert result is not None
+    assert "Recency" in result.index
+    assert "Frequency" in result.index
+    assert "Monetary" in result.index

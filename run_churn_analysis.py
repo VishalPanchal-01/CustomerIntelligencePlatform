@@ -46,5 +46,18 @@ def main():
     print("\nInvalid Churn Labels:")
     print(quality_report["invalid_churn_labels"])
 
+
+
+    skewness = (analyzer.analyze_feature_skewness(df))
+
+    print("\nFeature Skewness:")
+
+    print(skewness)
+
+    outliers = (analyzer.analyze_feature_outliers(df))
+
+    print("\nFeature Outlier Report:")
+    print(outliers)
+
 if __name__ == "__main__":
     main()

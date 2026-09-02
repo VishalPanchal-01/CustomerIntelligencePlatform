@@ -94,4 +94,56 @@ class ChurnAnalysis:
 
         except Exception as e:
             logger.error("churn quality analysis failed.")
+            raise CustomException(e,sys)
+
+    def analyze_feature_skewness(self,df:pd.DataFrame) ->pd.DataFrame:
+        try:
+            logger.info("Analyze feature skewness.")
+            features = ['Recency','Frequency','Monetary','TotalItems','AverageOrderValue','Tenure']
+
+            skewness = (df[features].skew().sort_values(ascending=False))
+            logger.info(f"Feature Skewness : {skewness}")
+            return skewness
+        
+        except Exception as e:
+            logger.error("feature skewness analysis failed.")
+            raise CustomException(e,sys)    
+
+    def analyze_feature_outliers(self,df: pd.DataFrame) -> pd.DataFrame:
+        try:
+            logger.info("Analyzing feature outliers.")
+            features = ["Recency","Frequency","Monetary","TotalItems","AverageOrderValue","Tenure"]
+
+            outlier_report = []
+            for feature in features:
+                q1 = df[feature].quantile(0.25)
+                q3 = df[feature].quantile(0.75)
+
+                iqr = q3 - q1   
+                lower_bound = (q1 - 1.5 * iqr)
+                upper_bound = (q3 + 1.5 * iqr)
+
+                outliers = df[(df[feature] < lower_bound)|(df[feature] > upper_bound)]
+                outlier_count = len(outliers)
+
+                outlier_percentage = (outlier_count/ len(df)* 100)
+                outlier_report.append({
+                    "Feature": feature,
+                    "Q1": q1,
+                    "Q3": q3,
+                    "IQR": iqr,
+                    "LowerBound":lower_bound,
+                    "UpperBound":upper_bound,
+                    "OutlierCount":outlier_count,
+                    "OutlierPercentage":outlier_percentage
+                })
+
+                report = pd.DataFrame(outlier_report)
+
+            logger.info(f"Feature outlier report:\n"f"{report}")
+
+            return report
+
+        except Exception as e:
+            logger.error("Feature outlier analysis failed.")
             raise CustomException(e,sys)    
