@@ -28,3 +28,23 @@ class ModelAnalysis:
         except Exception as e:
             logger.error("Logistic coefficient analysis failed.")
             raise CustomException(e,sys)
+
+    def analyze_random_forest_importance(self,model,feature_names) -> pd.DataFrame:
+        try:
+            logger.info("Analyzing random forest feature importance.")
+            importance = (model.feature_importances_)
+
+            report = pd.DataFrame({
+                "Feature": feature_names,
+                "Importance": importance
+            })
+
+            report = (report.sort_values(by="Importance",ascending=False).reset_index(drop=True))
+
+            logger.info(f"Random forest feature importance:\n"f"{report}")
+
+            return report
+
+        except Exception as e:
+            logger.error("Random forest feature importance analysis failed.")
+            raise CustomException(e,sys)    
