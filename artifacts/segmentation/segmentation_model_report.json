@@ -1,0 +1,157 @@
+{
+    "model": {
+        "algorithm": "KMeans",
+        "selected_clusters": 4,
+        "random_state": 42,
+        "n_init": 10,
+        "model_path": "models/segmentation\\kmeans_model.pkl",
+        "preprocessor_path": "models/segmentation\\segmentation_preprocessor.pkl"
+    },
+    "features": [
+        "Recency",
+        "Frequency",
+        "Monetary",
+        "TotalItems",
+        "AverageOrderValue",
+        "Tenure"
+    ],
+    "preprocessing": {
+        "log_transformed_features": [
+            "Frequency",
+            "Monetary",
+            "TotalItems",
+            "AverageOrderValue"
+        ],
+        "non_log_features": [
+            "Recency",
+            "Tenure"
+        ],
+        "scaling": "StandardScaler",
+        "customer_id_used_as_feature": false
+    },
+    "dataset": {
+        "total_customers": 5281,
+        "feature_count": 6,
+        "cluster_distribution": {
+            "0": {
+                "customer_count": 1161,
+                "customer_percentage": 21.984472637758003
+            },
+            "1": {
+                "customer_count": 1214,
+                "customer_percentage": 22.988070441204318
+            },
+            "2": {
+                "customer_count": 1384,
+                "customer_percentage": 26.20715773527741
+            },
+            "3": {
+                "customer_count": 1522,
+                "customer_percentage": 28.820299185760273
+            }
+        }
+    },
+    "evaluation": {
+        "silhouette_score": 0.25909184473176966,
+        "inertia": 11485.985199879613
+    },
+    "segments": [
+        {
+            "cluster": 0,
+            "segment_name": "High Value Loyal",
+            "customer_count": 1161,
+            "customer_percentage": 21.98,
+            "average_features": {
+                "Recency": 58.1,
+                "Frequency": 16.52,
+                "Monetary": 9471.07,
+                "TotalItems": 5870.93,
+                "AverageOrderValue": 562.81,
+                "Tenure": 508.1
+            },
+            "behavioral_flags": {
+                "RecentPurchase": true,
+                "HighFrequency": true,
+                "HighMonetary": true,
+                "HighVolume": true,
+                "HighAOV": true,
+                "LongTenure": true
+            },
+            "recommendation": "Focus on retention, loyalty rewards, premium benefits, early access, and personalized cross-sell recommendations."
+        },
+        {
+            "cluster": 1,
+            "segment_name": "Low Engagement",
+            "customer_count": 1214,
+            "customer_percentage": 22.99,
+            "average_features": {
+                "Recency": 338.42,
+                "Frequency": 1.39,
+                "Monetary": 189.47,
+                "TotalItems": 100.69,
+                "AverageOrderValue": 144.49,
+                "Tenure": 30.52
+            },
+            "behavioral_flags": {
+                "RecentPurchase": false,
+                "HighFrequency": false,
+                "HighMonetary": false,
+                "HighVolume": false,
+                "HighAOV": false,
+                "LongTenure": false
+            },
+            "recommendation": "Use low-cost reactivation campaigns, discount testing, and targeted messaging before investing heavily in retention."
+        },
+        {
+            "cluster": 2,
+            "segment_name": "Low Engagement",
+            "customer_count": 1384,
+            "customer_percentage": 26.21,
+            "average_features": {
+                "Recency": 303.88,
+                "Frequency": 1.78,
+                "Monetary": 927.04,
+                "TotalItems": 566.53,
+                "AverageOrderValue": 543.41,
+                "Tenure": 52.07
+            },
+            "behavioral_flags": {
+                "RecentPurchase": false,
+                "HighFrequency": false,
+                "HighMonetary": false,
+                "HighVolume": false,
+                "HighAOV": true,
+                "LongTenure": false
+            },
+            "recommendation": "Use low-cost reactivation campaigns, discount testing, and targeted messaging before investing heavily in retention."
+        },
+        {
+            "cluster": 3,
+            "segment_name": "Regular Customer",
+            "customer_count": 1522,
+            "customer_percentage": 28.82,
+            "average_features": {
+                "Recency": 128.64,
+                "Frequency": 4.6,
+                "Monetary": 1168.51,
+                "TotalItems": 673.67,
+                "AverageOrderValue": 270.24,
+                "Tenure": 318.48
+            },
+            "behavioral_flags": {
+                "RecentPurchase": true,
+                "HighFrequency": false,
+                "HighMonetary": false,
+                "HighVolume": false,
+                "HighAOV": false,
+                "LongTenure": true
+            },
+            "recommendation": "Maintain consistent engagement and use personalized recommendations to increase purchase frequency and customer value."
+        }
+    ],
+    "visualizations": {
+        "cluster_distribution": "artifacts/segmentation/plots\\cluster_distribution.png",
+        "cluster_feature_profile": "artifacts/segmentation/plots\\cluster_feature_profile.png",
+        "pca_visualization": "artifacts/segmentation/plots\\customer_segments_pca.png"
+    }
+}

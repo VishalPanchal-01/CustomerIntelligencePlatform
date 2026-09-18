@@ -1,0 +1,5 @@
+Cluster,Recency,Frequency,Monetary,TotalItems,AverageOrderValue,Tenure,CustomerCount,CustomerPercentage,RecentPurchase,HighFrequency,HighMonetary,HighVolume,HighAOV,LongTenure,SegmentName,Recommendation
+0,58.1,16.52,9471.07,5870.93,562.81,508.1,1161,21.98,True,True,True,True,True,True,High Value Loyal,"Focus on retention, loyalty rewards, premium benefits, early access, and personalized cross-sell recommendations."
+1,338.42,1.39,189.47,100.69,144.49,30.52,1214,22.99,False,False,False,False,False,False,Low Engagement,"Use low-cost reactivation campaigns, discount testing, and targeted messaging before investing heavily in retention."
+2,303.88,1.78,927.04,566.53,543.41,52.07,1384,26.21,False,False,False,False,True,False,Low Engagement,"Use low-cost reactivation campaigns, discount testing, and targeted messaging before investing heavily in retention."
+3,128.64,4.6,1168.51,673.67,270.24,318.48,1522,28.82,True,False,False,False,False,True,Regular Customer,Maintain consistent engagement and use personalized recommendations to increase purchase frequency and customer value.

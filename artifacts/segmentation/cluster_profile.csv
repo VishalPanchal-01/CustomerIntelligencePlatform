@@ -1,0 +1,5 @@
+Cluster,CustomerCount,CustomerPercentage,Recency_Mean,Frequency_Mean,Monetary_Mean,TotalItems_Mean,AverageOrderValue_Mean,Tenure_Mean,Recency_Median,Frequency_Median,Monetary_Median,TotalItems_Median,AverageOrderValue_Median,Tenure_Median
+0,1161,21.98,58.1,16.52,9471.07,5870.93,562.81,508.1,33.0,11.0,4596.31,2637.0,413.53,532.0
+1,1214,22.99,338.42,1.39,189.47,100.69,144.49,30.52,333.0,1.0,174.76,87.0,138.16,0.0
+2,1384,26.21,303.88,1.78,927.04,566.53,543.41,52.07,314.0,1.0,601.58,329.5,381.49,0.0
+3,1522,28.82,128.64,4.6,1168.51,673.67,270.24,318.48,101.0,4.0,1065.16,572.0,247.66,324.0
