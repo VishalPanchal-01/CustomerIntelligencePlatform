@@ -1,0 +1,38 @@
+{
+    "module": "Next Product Recommendation",
+    "selected_model": "Item-Based Collaborative Filtering",
+    "selection": {
+        "k": 10,
+        "rule": {
+            "primary_metric": "Recall@10",
+            "tie_breaker_1": "HitRate@10",
+            "tie_breaker_2": "Precision@10",
+            "tie_breaker_3": "CatalogCoverage"
+        },
+        "metrics": {
+            "precision_at_k": 0.1447813822284908,
+            "recall_at_k": 0.1396050631852487,
+            "hit_rate_at_k": 0.5867418899858956,
+            "catalog_coverage": 0.4966471987886653,
+            "unique_recommended_products": 2296
+        },
+        "evaluation_strategy": "Temporal leave-last-invoice-out",
+        "ground_truth": "Later customer purchases that were available in the training product catalog",
+        "repeat_purchases_allowed": true
+    },
+    "model_configuration": {
+        "type": "ItemBasedCollaborativeRecommender",
+        "similarity": "Cosine Similarity",
+        "interaction_value": "InteractionStrength",
+        "personalized": true,
+        "cold_start_supported": false
+    },
+    "training_data": {
+        "interaction_file": "artifacts/recommendation/recommendation_train_interactions.csv",
+        "interaction_value": "InteractionStrength"
+    },
+    "evaluation_artifacts": {
+        "complete_comparison": "artifacts/recommendation/recommendation_model_comparison.csv",
+        "final_ranked_comparison": "artifacts/recommendation/final\\recommendation_final_comparison.csv"
+    }
+}

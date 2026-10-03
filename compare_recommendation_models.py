@@ -78,39 +78,55 @@ def load_metrics(
 def main():
 
     # =================================
-    # PATHS
+    # METRIC FILES
     # =================================
 
-    popularity_path = (
-        "artifacts/recommendation/"
-        "baseline/"
-        "popularity_metrics.json"
-    )
+    metric_files = [
 
-    item_cf_path = (
-        "artifacts/recommendation/"
-        "item_cf/"
-        "item_cf_metrics.json"
-    )
+        (
+            "Popularity Baseline",
 
-    matrix_factorization_path = (
-        "artifacts/recommendation/"
-        "matrix_factorization/"
-        "matrix_factorization_metrics.json"
-    )
+            "artifacts/recommendation/"
+            "baseline/"
+            "popularity_metrics.json"
+        ),
+
+        (
+            "Item-Based Collaborative Filtering",
+
+            "artifacts/recommendation/"
+            "item_cf/"
+            "item_cf_metrics.json"
+        ),
+
+        (
+            "Matrix Factorization",
+
+            "artifacts/recommendation/"
+            "matrix_factorization/"
+            "matrix_factorization_metrics.json"
+        ),
+
+        (
+            "Hybrid Recommender",
+
+            "artifacts/recommendation/"
+            "hybrid/"
+            "hybrid_metrics.json"
+        )
+    ]
 
     output_path = (
         "artifacts/recommendation/"
         "recommendation_model_comparison.csv"
     )
 
-    required_files = [
-        popularity_path,
-        item_cf_path,
-        matrix_factorization_path
-    ]
+    rows = []
 
-    for file_path in required_files:
+    for (
+        model_name,
+        file_path
+    ) in metric_files:
 
         if not os.path.exists(
             file_path
@@ -121,32 +137,19 @@ def main():
                 f"not found: {file_path}"
             )
 
+        rows.extend(
+            load_metrics(
+                file_path=
+                    file_path,
+
+                model_name=
+                    model_name
+            )
+        )
+
     # =================================
-    # BUILD COMPARISON
+    # DATAFRAME
     # =================================
-
-    rows = []
-
-    rows.extend(
-        load_metrics(
-            popularity_path,
-            "Popularity Baseline"
-        )
-    )
-
-    rows.extend(
-        load_metrics(
-            item_cf_path,
-            "Item-Based Collaborative Filtering"
-        )
-    )
-
-    rows.extend(
-        load_metrics(
-            matrix_factorization_path,
-            "Matrix Factorization"
-        )
-    )
 
     comparison = pd.DataFrame(
         rows
@@ -158,10 +161,12 @@ def main():
             by=[
                 "K",
                 "RecallAtK",
-                "HitRateAtK"
+                "HitRateAtK",
+                "PrecisionAtK"
             ],
             ascending=[
                 True,
+                False,
                 False,
                 False
             ]
@@ -181,7 +186,7 @@ def main():
     )
 
     # =================================
-    # OUTPUT
+    # DISPLAY
     # =================================
 
     print(
@@ -206,7 +211,7 @@ def main():
             f"\n---------- K={k} ----------"
         )
 
-        k_results = (
+        result = (
             comparison[
                 comparison[
                     "K"
@@ -217,7 +222,7 @@ def main():
         )
 
         print(
-            k_results.to_string(
+            result.to_string(
                 index=False
             )
         )

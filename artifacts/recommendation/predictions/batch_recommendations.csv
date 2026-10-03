@@ -1,0 +1,51 @@
+CustomerID,KnownCustomer,Mode,RecommendationSource,StockCode,Description,Score,Rank
+12346.0,True,next_purchase,Item-Based Collaborative Filtering,23166,MEDIUM CERAMIC TOP STORAGE JAR,17.97334734079104,1
+12346.0,True,next_purchase,Item-Based Collaborative Filtering,20685,DOORMAT RED SPOT,15.326604237918175,2
+12346.0,True,next_purchase,Item-Based Collaborative Filtering,21524,DOORMAT SPOTTY HOME SWEET HOME,14.888646046092374,3
+12346.0,True,next_purchase,Item-Based Collaborative Filtering,21523,DOORMAT FANCY FONT HOME SWEET HOME,14.815442997045075,4
+12346.0,True,next_purchase,Item-Based Collaborative Filtering,48187,DOORMAT NEW ENGLAND,14.15495239173328,5
+12347.0,True,next_purchase,Item-Based Collaborative Filtering,22423,REGENCY CAKESTAND 3 TIER,107.36204626813746,1
+12347.0,True,next_purchase,Item-Based Collaborative Filtering,21212,PACK OF 72 RETROSPOT CAKE CASES,103.18288993945245,2
+12347.0,True,next_purchase,Item-Based Collaborative Filtering,84992,72 SWEETHEART FAIRY CAKE CASES,97.99736569857399,3
+12347.0,True,next_purchase,Item-Based Collaborative Filtering,22417,PACK OF 60 SPACEBOY CAKE CASES,96.74049578686139,4
+12347.0,True,next_purchase,Item-Based Collaborative Filtering,20725,LUNCH BAG RED RETROSPOT,95.53770371883991,5
+12348.0,True,next_purchase,Item-Based Collaborative Filtering,21212,PACK OF 72 RETROSPOT CAKE CASES,44.7071023528016,1
+12348.0,True,next_purchase,Item-Based Collaborative Filtering,84992,72 SWEETHEART FAIRY CAKE CASES,44.604900974191885,2
+12348.0,True,next_purchase,Item-Based Collaborative Filtering,84991,60 TEATIME FAIRY CAKE CASES,44.208016535936906,3
+12348.0,True,next_purchase,Item-Based Collaborative Filtering,21977,PACK OF 60 PINK PAISLEY CAKE CASES,42.931190009188235,4
+12348.0,True,next_purchase,Item-Based Collaborative Filtering,21213,PACK OF 72 SKULL CAKE CASES,41.626843298586365,5
+12349.0,True,next_purchase,Item-Based Collaborative Filtering,21212,PACK OF 72 RETROSPOT CAKE CASES,95.12176550713167,1
+12349.0,True,next_purchase,Item-Based Collaborative Filtering,22423,REGENCY CAKESTAND 3 TIER,94.31662892015318,2
+12349.0,True,next_purchase,Item-Based Collaborative Filtering,20685,DOORMAT RED SPOT,93.84488601440741,3
+12349.0,True,next_purchase,Item-Based Collaborative Filtering,20725,LUNCH BAG RED RETROSPOT,89.62620958782185,4
+12349.0,True,next_purchase,Item-Based Collaborative Filtering,21843,RED RETROSPOT CAKE STAND,88.4744394876578,5
+12350.0,True,next_purchase,Item-Based Collaborative Filtering,22551,PLASTERS IN TIN SPACEBOY,12.495074213762521,1
+12350.0,True,next_purchase,Item-Based Collaborative Filtering,22557,PLASTERS IN TIN VINTAGE PAISLEY,11.98388926348459,2
+12350.0,True,next_purchase,Item-Based Collaborative Filtering,22348,TEA BAG PLATE RED RETROSPOT,11.636389071965608,3
+12350.0,True,next_purchase,Item-Based Collaborative Filtering,21908,CHOCOLATE THIS WAY METAL SIGN,11.57155587167866,4
+12350.0,True,next_purchase,Item-Based Collaborative Filtering,21866,UNION JACK FLAG LUGGAGE TAG,11.486753981672502,5
+12351.0,True,next_purchase,Item-Based Collaborative Filtering,22045,SPACEBOY GIFT WRAP,14.74115084453852,1
+12351.0,True,next_purchase,Item-Based Collaborative Filtering,22706,WRAP COWBOYS,13.824283250382592,2
+12351.0,True,next_purchase,Item-Based Collaborative Filtering,22423,REGENCY CAKESTAND 3 TIER,12.93777623323778,3
+12351.0,True,next_purchase,Item-Based Collaborative Filtering,22050,PINK PAISLEY ROSE GIFT WRAP,12.728000001622306,4
+12351.0,True,next_purchase,Item-Based Collaborative Filtering,21212,PACK OF 72 RETROSPOT CAKE CASES,12.644577597189576,5
+12352.0,True,next_purchase,Item-Based Collaborative Filtering,22423,REGENCY CAKESTAND 3 TIER,54.3398071815795,1
+12352.0,True,next_purchase,Item-Based Collaborative Filtering,22720,SET OF 3 CAKE TINS PANTRY DESIGN,53.04690509622724,2
+12352.0,True,next_purchase,Item-Based Collaborative Filtering,21212,PACK OF 72 RETROSPOT CAKE CASES,50.618241185012636,3
+12352.0,True,next_purchase,Item-Based Collaborative Filtering,85123A,WHITE HANGING HEART T-LIGHT HOLDER,49.8664544907505,4
+12352.0,True,next_purchase,Item-Based Collaborative Filtering,22666,RECIPE BOX PANTRY YELLOW DESIGN,49.765975230346356,5
+12353.0,True,next_purchase,Item-Based Collaborative Filtering,21232,STRAWBERRY CERAMIC TRINKET BOX,22.9969688721041,1
+12353.0,True,next_purchase,Item-Based Collaborative Filtering,21231,SWEETHEART CERAMIC TRINKET BOX,22.69330777655596,2
+12353.0,True,next_purchase,Item-Based Collaborative Filtering,22064,PINK DOUGHNUT TRINKET POT,20.251069903933598,3
+12353.0,True,next_purchase,Item-Based Collaborative Filtering,37450,CERAMIC CAKE BOWL + HANGING CAKES,19.728704327668204,4
+12353.0,True,next_purchase,Item-Based Collaborative Filtering,37446,MINI CAKE STAND WITH HANGING CAKES,19.5647865064363,5
+12354.0,True,next_purchase,Item-Based Collaborative Filtering,21239,PINK  POLKADOT CUP,53.40275489128659,1
+12354.0,True,next_purchase,Item-Based Collaborative Filtering,21240,BLUE POLKADOT CUP,52.86346542878819,2
+12354.0,True,next_purchase,Item-Based Collaborative Filtering,21238,RED RETROSPOT CUP,52.46425532070876,3
+12354.0,True,next_purchase,Item-Based Collaborative Filtering,20677,PINK POLKADOT BOWL,51.115961631056834,4
+12354.0,True,next_purchase,Item-Based Collaborative Filtering,20676,RED RETROSPOT BOWL,51.09566961191324,5
+12355.0,True,next_purchase,Item-Based Collaborative Filtering,22423,REGENCY CAKESTAND 3 TIER,21.26834673944645,1
+12355.0,True,next_purchase,Item-Based Collaborative Filtering,84596F,SMALL MARSHMALLOWS PINK BOWL,21.153738608769018,2
+12355.0,True,next_purchase,Item-Based Collaborative Filtering,84596B,SMALL DOLLY MIX DESIGN ORANGE BOWL,20.819891214286244,3
+12355.0,True,next_purchase,Item-Based Collaborative Filtering,84050,PINK HEART SHAPE EGG FRYING PAN,20.065928888561153,4
+12355.0,True,next_purchase,Item-Based Collaborative Filtering,22699,ROSES REGENCY TEACUP AND SAUCER,19.94874540876807,5

@@ -1,0 +1,31 @@
+{
+    "module": "Next Product Recommendation",
+    "selected_model": "Item-Based Collaborative Filtering",
+    "model_path": "models/recommendation/recommender.pkl",
+    "training_source": "artifacts/recommendation/customer_product_interactions.csv",
+    "training_scope": "Complete valid customer-product interaction history available after model selection",
+    "evaluation_scope": "Model selection metrics were obtained from temporal leave-last-invoice-out evaluation before full-history retraining.",
+    "configuration": {
+        "type": "ItemBasedCollaborativeRecommender",
+        "similarity": "Cosine Similarity",
+        "interaction_value": "InteractionStrength",
+        "personalized": true,
+        "cold_start_supported": false
+    },
+    "dataset": {
+        "interaction_count": 481932,
+        "customer_count": 5878,
+        "product_count": 4631
+    },
+    "prediction": {
+        "default_top_k": 10,
+        "repeat_purchase_mode_supported": true,
+        "discovery_mode_supported": true,
+        "cold_start_support": false
+    },
+    "persistence_verification": {
+        "reload_successful": true,
+        "sample_customer": "12346.0",
+        "sample_recommendation_count": 5
+    }
+}

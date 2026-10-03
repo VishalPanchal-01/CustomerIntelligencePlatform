@@ -17,3 +17,5 @@ logs/
 
 data/raw/
 data/processed/
+
+models/recommendation/recommender.pkl

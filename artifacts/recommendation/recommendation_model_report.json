@@ -1,0 +1,244 @@
+{
+    "module": {
+        "name": "Next Product Recommendation",
+        "problem_type": "Implicit-feedback Top-N recommendation",
+        "business_goal": "Recommend products that a customer is likely to purchase next, while also supporting product-discovery mode."
+    },
+    "interaction_engineering": {
+        "source": "Clean positive purchase transactions",
+        "interaction_unit": "CustomerID x StockCode",
+        "aggregated_features": [
+            "PurchaseCount",
+            "TotalQuantity",
+            "TotalSpend",
+            "LastPurchaseDate",
+            "InteractionStrength"
+        ],
+        "interaction_strength_formula": "log1p(PurchaseCount) + log1p(TotalQuantity)",
+        "explicit_ratings_used": false,
+        "feedback_type": "Implicit",
+        "cancellations_as_positive_signal": false,
+        "negative_quantity_as_positive_signal": false
+    },
+    "evaluation_design": {
+        "strategy": "Leave-last-invoice-out",
+        "split_level": "Invoice",
+        "holdout_invoices_per_customer": 1,
+        "minimum_invoices_for_evaluation": 2,
+        "future_interactions_removed_before_training": true,
+        "training_interactions_built_after_split": true,
+        "warm_item_evaluation": true,
+        "cold_start_products_separated": true,
+        "repeat_purchases_allowed_during_evaluation": true
+    },
+    "evaluation_population": {
+        "training": {
+            "transaction_rows": 718002,
+            "customers": 5878,
+            "products": 4623,
+            "customer_product_interactions": 426869,
+            "interaction_matrix_density_percentage": 1.5708732400544434
+        },
+        "evaluation": {
+            "eligible_customers": 4255,
+            "customers_with_heldout_products": 4255,
+            "customers_with_evaluable_ground_truth": 4254,
+            "heldout_customer_product_pairs": 83672,
+            "evaluable_customer_product_pairs": 83661,
+            "cold_start_product_pairs": 11,
+            "evaluable_item_percentage": 99.98685342766996
+        }
+    },
+    "candidate_models": [
+        {
+            "name": "Popularity Baseline",
+            "approach": "Global product popularity using customer adoption, purchase frequency and quantity"
+        },
+        {
+            "name": "Item-Based Collaborative Filtering",
+            "approach": "Customer-item sparse matrix with item-item cosine similarity"
+        },
+        {
+            "name": "Matrix Factorization",
+            "approach": "TruncatedSVD over the implicit customer-product interaction matrix"
+        },
+        {
+            "name": "Hybrid Recommender",
+            "approach": "Weighted fusion of Item-CF, Matrix Factorization and Popularity scores"
+        }
+    ],
+    "evaluation_metrics": {
+        "metrics_used": [
+            "Precision@K",
+            "Recall@K",
+            "HitRate@K",
+            "CatalogCoverage"
+        ],
+        "evaluated_k_values": [
+            5,
+            10,
+            20
+        ],
+        "primary_selection_metric": "Recall@10",
+        "tie_breaker_1": "HitRate@10",
+        "tie_breaker_2": "Precision@10",
+        "tie_breaker_3": "CatalogCoverage"
+    },
+    "model_comparison": [
+        {
+            "model": "Item-Based Collaborative Filtering",
+            "k": 5,
+            "precision_at_k": 0.173389750822755,
+            "recall_at_k": 0.0943407199923468,
+            "hit_rate_at_k": 0.4685002350728726,
+            "catalog_coverage": 0.36361669911313,
+            "unique_recommended_products": 1681
+        },
+        {
+            "model": "Matrix Factorization",
+            "k": 5,
+            "precision_at_k": 0.1525152797367184,
+            "recall_at_k": 0.0636526771449812,
+            "hit_rate_at_k": 0.4344146685472496,
+            "catalog_coverage": 0.0584036340038935,
+            "unique_recommended_products": 270
+        },
+        {
+            "model": "Popularity Baseline",
+            "k": 5,
+            "precision_at_k": 0.0699106723084156,
+            "recall_at_k": 0.025267598907286,
+            "hit_rate_at_k": 0.2849083215796897,
+            "catalog_coverage": 0.0010815487778498,
+            "unique_recommended_products": 5
+        },
+        {
+            "model": "Item-Based Collaborative Filtering",
+            "k": 10,
+            "precision_at_k": 0.1447813822284908,
+            "recall_at_k": 0.1396050631852487,
+            "hit_rate_at_k": 0.5867418899858956,
+            "catalog_coverage": 0.4966471987886653,
+            "unique_recommended_products": 2296
+        },
+        {
+            "model": "Matrix Factorization",
+            "k": 10,
+            "precision_at_k": 0.1261165961448049,
+            "recall_at_k": 0.0986806218661941,
+            "hit_rate_at_k": 0.5409026798307476,
+            "catalog_coverage": 0.0847934241834306,
+            "unique_recommended_products": 392
+        },
+        {
+            "model": "Popularity Baseline",
+            "k": 10,
+            "precision_at_k": 0.0523272214386459,
+            "recall_at_k": 0.0348018878175021,
+            "hit_rate_at_k": 0.3535496003761166,
+            "catalog_coverage": 0.0021630975556997,
+            "unique_recommended_products": 10
+        },
+        {
+            "model": "Item-Based Collaborative Filtering",
+            "k": 20,
+            "precision_at_k": 0.1133874000940291,
+            "recall_at_k": 0.1942376086712875,
+            "hit_rate_at_k": 0.7007522331922896,
+            "catalog_coverage": 0.6084793424183431,
+            "unique_recommended_products": 2813
+        },
+        {
+            "model": "Matrix Factorization",
+            "k": 20,
+            "precision_at_k": 0.1030089327691584,
+            "recall_at_k": 0.1513336066573095,
+            "hit_rate_at_k": 0.6582040432534085,
+            "catalog_coverage": 0.1276227557862859,
+            "unique_recommended_products": 590
+        },
+        {
+            "model": "Popularity Baseline",
+            "k": 20,
+            "precision_at_k": 0.0457686882933709,
+            "recall_at_k": 0.0597739136169529,
+            "hit_rate_at_k": 0.4920075223319229,
+            "catalog_coverage": 0.0043261951113995,
+            "unique_recommended_products": 20
+        }
+    ],
+    "selected_strategy": {
+        "model": "Item-Based Collaborative Filtering",
+        "selection_k": 10,
+        "precision_at_k": 0.1447813822284908,
+        "recall_at_k": 0.1396050631852487,
+        "hit_rate_at_k": 0.5867418899858956,
+        "catalog_coverage": 0.4966471987886653,
+        "unique_recommended_products": 2296,
+        "configuration": {
+            "type": "ItemBasedCollaborativeRecommender",
+            "similarity": "Cosine Similarity",
+            "interaction_value": "InteractionStrength",
+            "personalized": true,
+            "cold_start_supported": false
+        }
+    },
+    "production_training": {
+        "retrained_after_selection": true,
+        "training_scope": "Complete valid customer-product interaction history available after model selection",
+        "training_source": "artifacts/recommendation/customer_product_interactions.csv",
+        "evaluation_scope_note": "Model selection metrics were obtained from temporal leave-last-invoice-out evaluation before full-history retraining.",
+        "interaction_count": 481932,
+        "customer_count": 5878,
+        "product_count": 4631
+    },
+    "production_prediction": {
+        "model_path": "models/recommendation/recommender.pkl",
+        "model_loaded_once": true,
+        "default_top_k": 10,
+        "next_purchase_mode": {
+            "supported": true,
+            "already_purchased_products_excluded": false
+        },
+        "discovery_mode": {
+            "supported": true,
+            "already_purchased_products_excluded": true
+        },
+        "batch_prediction_supported": true,
+        "standard_output_fields": [
+            "StockCode",
+            "Description",
+            "Score",
+            "Rank"
+        ]
+    },
+    "cold_start": {
+        "user_cold_start": "Popularity fallback is used when available in the persisted production strategy.",
+        "item_cold_start": "Products not seen during model training cannot receive learned collaborative or latent-factor scores.",
+        "evaluation_treatment": "Held-out products unavailable in the training catalog are tracked separately from warm-item metrics."
+    },
+    "interpretation": {
+        "recommendation_score": "The recommendation score is a ranking score. It is not a purchase probability.",
+        "precision": "Fraction of Top-K recommendation slots matching held-out products.",
+        "recall": "Fraction of the customer's held-out products recovered inside Top-K.",
+        "hit_rate": "Fraction of evaluated customers for whom at least one held-out product appears in Top-K.",
+        "catalog_coverage": "Fraction of the training product catalog appearing across generated recommendations."
+    },
+    "limitations": [
+        "The same temporal benchmark was used for comparing recommendation configurations; there is not yet a separate later untouched temporal test period.",
+        "Hybrid weights and matrix factorization dimensions are evaluated configurations rather than globally optimal parameters.",
+        "Recommendation scores are ranking signals and are not calibrated purchase probabilities.",
+        "The saved recommender represents customer behavior available at training time and requires retraining or an incremental strategy to learn new interactions.",
+        "New products without historical interactions remain an item cold-start challenge."
+    ],
+    "artifacts": {
+        "full_interactions": "artifacts/recommendation/customer_product_interactions.csv",
+        "training_interactions": "artifacts/recommendation/recommendation_train_interactions.csv",
+        "ground_truth": "artifacts/recommendation/recommendation_test_ground_truth.csv",
+        "evaluable_ground_truth": "artifacts/recommendation/recommendation_evaluable_ground_truth.csv",
+        "model_comparison": "artifacts/recommendation/recommendation_model_comparison.csv",
+        "selection_metadata": "artifacts/recommendation/final/recommendation_final_selection.json",
+        "production_model": "models/recommendation/recommender.pkl",
+        "production_metadata": "models/recommendation/recommender_metadata.json"
+    }
+}
