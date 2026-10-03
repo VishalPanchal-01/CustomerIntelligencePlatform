@@ -1,0 +1,5 @@
+Model,Target,BestCVMAE
+Gradient Boosting,Log,428.5130789402177
+Random Forest,Log,433.195746587808
+Gradient Boosting,Raw,461.50286460801215
+Random Forest,Raw,465.04394129566924

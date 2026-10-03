@@ -1,0 +1,7 @@
+Feature,CorrelationWithFutureRevenue
+Monetary,0.6709
+TotalItems,0.5219
+Frequency,0.3882
+AverageOrderValue,0.1919
+Tenure,0.1224
+Recency,-0.1167

@@ -1,0 +1,14 @@
+{
+    "missing_values": {
+        "Recency": 0,
+        "Frequency": 0,
+        "Monetary": 0,
+        "TotalItems": 0,
+        "AverageOrderValue": 0,
+        "Tenure": 0,
+        "FutureRevenue": 0
+    },
+    "infinite_values": 0,
+    "duplicate_customers": 0,
+    "negative_future_revenue": 0
+}
