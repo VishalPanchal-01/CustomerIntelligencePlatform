@@ -1,0 +1,26 @@
+{
+    "split_strategy": "Leave-last-invoice-out",
+    "holdout_invoices_per_eligible_customer": 1,
+    "minimum_invoices_for_evaluation": 2,
+    "training": {
+        "transaction_rows": 718002,
+        "customers": 5878,
+        "products": 4623,
+        "customer_product_interactions": 426869,
+        "interaction_matrix_density_percentage": 1.5708732400544434
+    },
+    "evaluation": {
+        "eligible_customers": 4255,
+        "customers_with_heldout_products": 4255,
+        "customers_with_evaluable_ground_truth": 4254,
+        "heldout_customer_product_pairs": 83672,
+        "evaluable_customer_product_pairs": 83661,
+        "cold_start_product_pairs": 11,
+        "evaluable_item_percentage": 99.98685342766996
+    },
+    "leakage_control": {
+        "split_level": "Invoice",
+        "future_invoices_removed_from_training": true,
+        "training_interactions_built_after_split": true
+    }
+}
