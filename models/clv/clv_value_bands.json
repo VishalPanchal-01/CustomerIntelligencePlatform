@@ -1,0 +1,11 @@
+{
+    "method": "Training target quantiles",
+    "prediction_horizon_days": 90,
+    "low_upper_bound": 0.0,
+    "medium_upper_bound": 243.58240000000006,
+    "definitions": {
+        "Low": "Predicted revenue <= 0.00",
+        "Medium": "Predicted revenue > 0.00 and <= 243.58",
+        "High": "Predicted revenue > 243.58"
+    }
+}

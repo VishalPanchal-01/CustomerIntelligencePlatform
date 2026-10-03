@@ -1,0 +1,7 @@
+Feature,Importance,ImportancePercentage
+Monetary,0.326098,32.61
+Recency,0.253515,25.35
+TotalItems,0.127509,12.75
+Frequency,0.116376,11.64
+AverageOrderValue,0.092904,9.29
+Tenure,0.083597,8.36

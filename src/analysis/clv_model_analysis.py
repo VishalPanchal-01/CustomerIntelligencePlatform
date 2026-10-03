@@ -60,11 +60,6 @@ class CLVModelAnalysis:
                 )
             )
 
-            logger.info(
-                f"CLV Linear Regression coefficients:\n"
-                f"{result}"
-            )
-
             return result
 
         except Exception as e:
@@ -87,27 +82,27 @@ class CLVModelAnalysis:
         try:
 
             logger.info(
-                "Analyzing CLV Random Forest feature importance."
+                "Analyzing CLV Random Forest "
+                "feature importance."
             )
 
-            result = (
+            estimator = (
+                self._get_underlying_regressor(
+                    model
+                )
+            )
+
+            return (
                 self._build_feature_importance_report(
-                    model,
+                    estimator,
                     feature_names
                 )
             )
 
-            logger.info(
-                f"CLV Random Forest feature importance:\n"
-                f"{result}"
-            )
-
-            return result
-
         except Exception as e:
 
             logger.error(
-                "CLV Random Forest feature importance "
+                "CLV Random Forest importance "
                 "analysis failed."
             )
 
@@ -129,26 +124,24 @@ class CLVModelAnalysis:
                 "feature importance."
             )
 
-            result = (
+            estimator = (
+                self._get_underlying_regressor(
+                    model
+                )
+            )
+
+            return (
                 self._build_feature_importance_report(
-                    model,
+                    estimator,
                     feature_names
                 )
             )
 
-            logger.info(
-                f"CLV Gradient Boosting "
-                f"feature importance:\n"
-                f"{result}"
-            )
-
-            return result
-
         except Exception as e:
 
             logger.error(
-                "CLV Gradient Boosting feature "
-                "importance analysis failed."
+                "CLV Gradient Boosting importance "
+                "analysis failed."
             )
 
             raise CustomException(
@@ -156,15 +149,104 @@ class CLVModelAnalysis:
                 sys
             )
 
+    def analyze_tree_importance(
+        self,
+        model,
+        feature_names: list
+    ) -> pd.DataFrame:
+
+        try:
+
+            logger.info(
+                "Analyzing final CLV tree-model "
+                "feature importance."
+            )
+
+            estimator = (
+                self._get_underlying_regressor(
+                    model
+                )
+            )
+
+            if not hasattr(
+                estimator,
+                "feature_importances_"
+            ):
+
+                raise ValueError(
+                    "Selected CLV model does not expose "
+                    "feature_importances_."
+                )
+
+            return (
+                self._build_feature_importance_report(
+                    estimator,
+                    feature_names
+                )
+            )
+
+        except Exception as e:
+
+            logger.error(
+                "Final CLV feature importance "
+                "analysis failed."
+            )
+
+            raise CustomException(
+                e,
+                sys
+            )
+
+    def _get_underlying_regressor(
+        self,
+        model
+    ):
+
+        # ---------------------------------
+        # TransformedTargetRegressor
+        # ---------------------------------
+
+        if hasattr(
+            model,
+            "regressor_"
+        ):
+
+            return model.regressor_
+
+        # ---------------------------------
+        # Normal estimator
+        # ---------------------------------
+
+        return model
+
     def _build_feature_importance_report(
         self,
         model,
         feature_names: list
     ) -> pd.DataFrame:
 
+        if not hasattr(
+            model,
+            "feature_importances_"
+        ):
+
+            raise ValueError(
+                "Model does not contain "
+                "feature_importances_."
+            )
+
         importances = (
             model.feature_importances_
         )
+
+        if len(importances) != len(
+            feature_names
+        ):
+
+            raise ValueError(
+                "Feature-name count does not match "
+                "feature importance count."
+            )
 
         result = pd.DataFrame(
             {

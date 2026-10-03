@@ -1,0 +1,49 @@
+{
+    "model": {
+        "name": "Gradient Boosting",
+        "target_strategy": "Log",
+        "artifact_path": "models/clv\\clv_model.pkl",
+        "best_parameters": {
+            "regressor__subsample": 0.7,
+            "regressor__n_estimators": 200,
+            "regressor__min_samples_split": 5,
+            "regressor__min_samples_leaf": 2,
+            "regressor__max_features": null,
+            "regressor__max_depth": 5,
+            "regressor__learning_rate": 0.03
+        }
+    },
+    "selection": {
+        "criterion": "Lowest cross-validated MAE",
+        "best_cv_mae": 428.5130789402177,
+        "final_test_used_for_selection": false
+    },
+    "features": [
+        "Recency",
+        "Frequency",
+        "Monetary",
+        "TotalItems",
+        "AverageOrderValue",
+        "Tenure"
+    ],
+    "target": {
+        "name": "FutureRevenue",
+        "prediction_horizon_days": 90
+    },
+    "final_test": {
+        "customer_count": 1057,
+        "mae": 562.9645389355658,
+        "rmse": 5632.069195648919,
+        "r2": 0.03193038533601089,
+        "negative_prediction_count": 0,
+        "negative_prediction_percentage": 0.0,
+        "actual_mean": 692.484399243141,
+        "predicted_mean": 177.15039500612366,
+        "actual_median": 0.0,
+        "predicted_median": 8.141650691332432
+    },
+    "artifacts": {
+        "feature_importance": "artifacts/clv/final\\clv_feature_importance.csv",
+        "test_predictions": "artifacts/clv/final\\clv_final_test_predictions.csv"
+    }
+}

@@ -1,0 +1,4 @@
+CustomerID,Recency,Frequency,Monetary,TotalItems,AverageOrderValue,Tenure,PredictedFutureRevenue,CLVValueBand,PredictionHorizonDays,WasNegativeBeforeClipping
+101,10,12,6500,600,541.67,400,112.85,Medium,90,False
+102,45,5,1800,150,360.0,220,106.86,Medium,90,False
+103,120,1,150,10,150.0,80,6.06,Medium,90,False
