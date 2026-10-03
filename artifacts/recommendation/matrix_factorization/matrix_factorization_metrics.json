@@ -1,0 +1,42 @@
+{
+    "model": "Matrix Factorization",
+    "algorithm": "TruncatedSVD",
+    "interaction_value": "InteractionStrength",
+    "requested_latent_factors": 20,
+    "actual_latent_factors": 20,
+    "explained_variance_ratio": 0.27007745488222845,
+    "evaluation_task": "Next-purchase prediction",
+    "repeat_purchases_allowed": true,
+    "metrics": {
+        "5": {
+            "k": 5,
+            "customer_count": 4254,
+            "precision_at_k": 0.1525152797367184,
+            "recall_at_k": 0.06365267714498125,
+            "hit_rate_at_k": 0.43441466854724964,
+            "catalog_coverage": 0.058403634003893576,
+            "unique_recommended_products": 270,
+            "catalog_product_count": 4623
+        },
+        "10": {
+            "k": 10,
+            "customer_count": 4254,
+            "precision_at_k": 0.12611659614480492,
+            "recall_at_k": 0.09868062186619415,
+            "hit_rate_at_k": 0.5409026798307476,
+            "catalog_coverage": 0.08479342418343068,
+            "unique_recommended_products": 392,
+            "catalog_product_count": 4623
+        },
+        "20": {
+            "k": 20,
+            "customer_count": 4254,
+            "precision_at_k": 0.10300893276915846,
+            "recall_at_k": 0.15133360665730952,
+            "hit_rate_at_k": 0.6582040432534085,
+            "catalog_coverage": 0.12762275578628596,
+            "unique_recommended_products": 590,
+            "catalog_product_count": 4623
+        }
+    }
+}

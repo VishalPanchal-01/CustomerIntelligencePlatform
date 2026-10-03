@@ -1,0 +1,37 @@
+{
+    "model": "Popularity Baseline",
+    "evaluation_task": "Next-purchase prediction",
+    "repeat_purchases_allowed": true,
+    "metrics": {
+        "5": {
+            "k": 5,
+            "customer_count": 4254,
+            "precision_at_k": 0.0699106723084156,
+            "recall_at_k": 0.02526759890728606,
+            "hit_rate_at_k": 0.2849083215796897,
+            "catalog_coverage": 0.001081548777849881,
+            "unique_recommended_products": 5,
+            "catalog_product_count": 4623
+        },
+        "10": {
+            "k": 10,
+            "customer_count": 4254,
+            "precision_at_k": 0.05232722143864598,
+            "recall_at_k": 0.03480188781750213,
+            "hit_rate_at_k": 0.3535496003761166,
+            "catalog_coverage": 0.002163097555699762,
+            "unique_recommended_products": 10,
+            "catalog_product_count": 4623
+        },
+        "20": {
+            "k": 20,
+            "customer_count": 4254,
+            "precision_at_k": 0.04576868829337094,
+            "recall_at_k": 0.059773913616952924,
+            "hit_rate_at_k": 0.4920075223319229,
+            "catalog_coverage": 0.004326195111399524,
+            "unique_recommended_products": 20,
+            "catalog_product_count": 4623
+        }
+    }
+}

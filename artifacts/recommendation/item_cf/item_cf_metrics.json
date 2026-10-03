@@ -1,0 +1,39 @@
+{
+    "model": "Item-Based Collaborative Filtering",
+    "similarity": "Cosine Similarity",
+    "interaction_value": "InteractionStrength",
+    "evaluation_task": "Next-purchase prediction",
+    "repeat_purchases_allowed": true,
+    "metrics": {
+        "5": {
+            "k": 5,
+            "customer_count": 4254,
+            "precision_at_k": 0.17338975082275507,
+            "recall_at_k": 0.09434071999234686,
+            "hit_rate_at_k": 0.4685002350728726,
+            "catalog_coverage": 0.36361669911313,
+            "unique_recommended_products": 1681,
+            "catalog_product_count": 4623
+        },
+        "10": {
+            "k": 10,
+            "customer_count": 4254,
+            "precision_at_k": 0.14478138222849085,
+            "recall_at_k": 0.13960506318524873,
+            "hit_rate_at_k": 0.5867418899858956,
+            "catalog_coverage": 0.49664719878866537,
+            "unique_recommended_products": 2296,
+            "catalog_product_count": 4623
+        },
+        "20": {
+            "k": 20,
+            "customer_count": 4254,
+            "precision_at_k": 0.11338740009402916,
+            "recall_at_k": 0.19423760867128756,
+            "hit_rate_at_k": 0.7007522331922896,
+            "catalog_coverage": 0.6084793424183431,
+            "unique_recommended_products": 2813,
+            "catalog_product_count": 4623
+        }
+    }
+}
