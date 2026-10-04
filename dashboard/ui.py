@@ -3,10 +3,72 @@ from datetime import datetime
 
 import pandas as pd
 import streamlit as st
+import plotly.io as pio
 
 
 CUSTOMER_ID = "Customer ID"
 
+def configure_plotly_theme():
+
+    template = pio.templates["plotly_white"]
+
+    template.layout.font = {
+        "family": "Inter, Segoe UI, Arial, sans-serif",
+        "size": 13,
+        "color": "#334155"
+    }
+
+    template.layout.title = {
+        "font": {
+            "family": "Inter, Segoe UI, Arial, sans-serif",
+            "size": 19,
+            "color": "#0f172a"
+        },
+        "x": 0.02,
+        "xanchor": "left"
+    }
+
+    template.layout.paper_bgcolor = "rgba(0,0,0,0)"
+    template.layout.plot_bgcolor = "rgba(255,255,255,0)"
+
+    template.layout.margin = {
+        "l": 35,
+        "r": 25,
+        "t": 65,
+        "b": 45
+    }
+
+    template.layout.hoverlabel = {
+        "bgcolor": "#111827",
+        "font": {
+            "color": "white",
+            "size": 12
+        },
+        "bordercolor": "#111827"
+    }
+
+    template.layout.legend = {
+        "bgcolor": "rgba(255,255,255,0)",
+        "font": {
+            "size": 12
+        }
+    }
+
+    template.layout.xaxis = {
+        "gridcolor": "#eef2f7",
+        "linecolor": "#cbd5e1",
+        "zerolinecolor": "#e2e8f0"
+    }
+
+    template.layout.yaxis = {
+        "gridcolor": "#eef2f7",
+        "linecolor": "#cbd5e1",
+        "zerolinecolor": "#e2e8f0"
+    }
+
+    pio.templates["cip_theme"] = template
+
+    pio.templates.default = "cip_theme"
 
 # ============================================================
 # GLOBAL DASHBOARD STYLE

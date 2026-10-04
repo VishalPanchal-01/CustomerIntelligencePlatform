@@ -1,0 +1,337 @@
+{
+    "phase": "Phase 6 \u2014 Explainable AI",
+    "status": "PASS",
+    "method": "SHAP",
+    "modules_explained": [
+        "Customer Churn Prediction",
+        "Predicted 90-Day Revenue"
+    ],
+    "artifact_validation": {
+        "churn_global_importance_csv": {
+            "path": "artifacts\\explainability\\churn\\churn_global_shap_importance.csv",
+            "exists": true,
+            "size_bytes": 246
+        },
+        "churn_local_shap_csv": {
+            "path": "artifacts\\explainability\\churn\\churn_dashboard_shap_values.csv",
+            "exists": true,
+            "size_bytes": 173885
+        },
+        "churn_summary_json": {
+            "path": "artifacts\\explainability\\churn\\churn_visualization_summary.json",
+            "exists": true,
+            "size_bytes": 2436
+        },
+        "churn_global_importance_png": {
+            "path": "artifacts\\explainability\\churn\\visualizations\\churn_global_feature_importance.png",
+            "exists": true,
+            "size_bytes": 44544
+        },
+        "churn_beeswarm_png": {
+            "path": "artifacts\\explainability\\churn\\visualizations\\churn_shap_beeswarm.png",
+            "exists": true,
+            "size_bytes": 107939
+        },
+        "churn_driver_png": {
+            "path": "artifacts\\explainability\\churn\\visualizations\\example_customer_churn_drivers.png",
+            "exists": true,
+            "size_bytes": 41591
+        },
+        "churn_waterfall_png": {
+            "path": "artifacts\\explainability\\churn\\visualizations\\example_customer_churn_waterfall.png",
+            "exists": true,
+            "size_bytes": 66202
+        },
+        "clv_global_importance_csv": {
+            "path": "artifacts\\explainability\\clv\\clv_global_shap_importance.csv",
+            "exists": true,
+            "size_bytes": 235
+        },
+        "clv_local_shap_csv": {
+            "path": "artifacts\\explainability\\clv\\clv_dashboard_shap_values.csv",
+            "exists": true,
+            "size_bytes": 168230
+        },
+        "clv_summary_json": {
+            "path": "artifacts\\explainability\\clv\\clv_visualization_summary.json",
+            "exists": true,
+            "size_bytes": 2814
+        },
+        "clv_global_importance_png": {
+            "path": "artifacts\\explainability\\clv\\visualizations\\clv_global_feature_importance.png",
+            "exists": true,
+            "size_bytes": 44817
+        },
+        "clv_beeswarm_png": {
+            "path": "artifacts\\explainability\\clv\\visualizations\\clv_shap_beeswarm.png",
+            "exists": true,
+            "size_bytes": 69904
+        },
+        "clv_driver_png": {
+            "path": "artifacts\\explainability\\clv\\visualizations\\example_customer_clv_drivers.png",
+            "exists": true,
+            "size_bytes": 40803
+        },
+        "clv_waterfall_png": {
+            "path": "artifacts\\explainability\\clv\\visualizations\\example_customer_clv_waterfall.png",
+            "exists": true,
+            "size_bytes": 74506
+        }
+    },
+    "dataset_validation": {
+        "churn_global_importance": {
+            "valid": true,
+            "rows": 6,
+            "missing_columns": []
+        },
+        "churn_local_explanations": {
+            "valid": true,
+            "rows": 1800,
+            "explained_customers": 300,
+            "missing_columns": []
+        },
+        "clv_global_importance": {
+            "valid": true,
+            "rows": 6,
+            "missing_columns": []
+        },
+        "clv_local_explanations": {
+            "valid": true,
+            "rows": 1800,
+            "explained_customers": 300,
+            "missing_columns": []
+        }
+    },
+    "explanation_coverage": {
+        "churn": {
+            "explained_customers": 300,
+            "total_customers": 5281,
+            "coverage_percentage": 5.680742283658398
+        },
+        "clv": {
+            "explained_customers": 300,
+            "total_customers": 5281,
+            "coverage_percentage": 5.680742283658398
+        },
+        "customers_explained_by_both": {
+            "count": 300
+        }
+    },
+    "global_feature_importance": {
+        "churn": [
+            {
+                "Feature": "Recency",
+                "Mean Absolute SHAP": 0.1131665596288139
+            },
+            {
+                "Feature": "Frequency",
+                "Mean Absolute SHAP": 0.0391349449404831
+            },
+            {
+                "Feature": "TotalItems",
+                "Mean Absolute SHAP": 0.0382612624075028
+            },
+            {
+                "Feature": "Monetary",
+                "Mean Absolute SHAP": 0.0347951939084563
+            },
+            {
+                "Feature": "Tenure",
+                "Mean Absolute SHAP": 0.0162417191553163
+            },
+            {
+                "Feature": "AverageOrderValue",
+                "Mean Absolute SHAP": 0.0080431761407079
+            }
+        ],
+        "predicted_90_day_revenue": [
+            {
+                "Feature": "Monetary",
+                "Mean Absolute SHAP": 115.37119322279824
+            },
+            {
+                "Feature": "TotalItems",
+                "Mean Absolute SHAP": 91.5633398232038
+            },
+            {
+                "Feature": "Recency",
+                "Mean Absolute SHAP": 88.44497315689561
+            },
+            {
+                "Feature": "Frequency",
+                "Mean Absolute SHAP": 84.28934480107876
+            },
+            {
+                "Feature": "Tenure",
+                "Mean Absolute SHAP": 33.68982143905288
+            },
+            {
+                "Feature": "AverageOrderValue",
+                "Mean Absolute SHAP": 26.610307584544515
+            }
+        ]
+    },
+    "churn_visualization_summary": {
+        "module": "Customer Churn Prediction",
+        "explanation_method": "SHAP",
+        "sample_size": 300,
+        "example_customer_id": "14190.0",
+        "example_churn_probability": 0.9220201642461986,
+        "top_global_features": [
+            {
+                "Feature": "Recency",
+                "Mean Absolute SHAP": 0.11316655962881392,
+                "Importance Rank": 1
+            },
+            {
+                "Feature": "Frequency",
+                "Mean Absolute SHAP": 0.03913494494048318,
+                "Importance Rank": 2
+            },
+            {
+                "Feature": "TotalItems",
+                "Mean Absolute SHAP": 0.038261262407502813,
+                "Importance Rank": 3
+            },
+            {
+                "Feature": "Monetary",
+                "Mean Absolute SHAP": 0.03479519390845634,
+                "Importance Rank": 4
+            },
+            {
+                "Feature": "Tenure",
+                "Mean Absolute SHAP": 0.01624171915531633,
+                "Importance Rank": 5
+            },
+            {
+                "Feature": "AverageOrderValue",
+                "Mean Absolute SHAP": 0.00804317614070793,
+                "Importance Rank": 6
+            }
+        ],
+        "top_churn_drivers": [
+            {
+                "Feature": "Recency",
+                "Feature Value": 575.0,
+                "SHAP Value": 0.14274083463032539
+            },
+            {
+                "Feature": "Monetary",
+                "Feature Value": 79.9,
+                "SHAP Value": 0.050568169542685636
+            },
+            {
+                "Feature": "TotalItems",
+                "Feature Value": 2.0,
+                "SHAP Value": 0.04413790421848419
+            }
+        ],
+        "top_retention_drivers": [],
+        "artifacts": {
+            "global_importance": "artifacts\\explainability\\churn\\visualizations\\churn_global_feature_importance.png",
+            "beeswarm": "artifacts\\explainability\\churn\\visualizations\\churn_shap_beeswarm.png",
+            "customer_driver": "artifacts\\explainability\\churn\\visualizations\\example_customer_churn_drivers.png",
+            "customer_waterfall": "artifacts\\explainability\\churn\\visualizations\\example_customer_churn_waterfall.png",
+            "dashboard_shap_values": "artifacts\\explainability\\churn\\churn_dashboard_shap_values.csv"
+        },
+        "interpretation_note": "Positive SHAP values push the churn prediction upward relative to the model baseline. Negative values push it downward. SHAP explains model behavior and does not establish causality."
+    },
+    "clv_visualization_summary": {
+        "module": "Customer Predicted 90-Day Revenue",
+        "explanation_method": "SHAP",
+        "sample_size": 300,
+        "example_customer_id": "12415.0",
+        "example_predicted_90_day_revenue": 23953.692197424396,
+        "top_global_features": [
+            {
+                "Feature": "Monetary",
+                "Mean Absolute SHAP": 115.37119322279824,
+                "Importance Rank": 1
+            },
+            {
+                "Feature": "TotalItems",
+                "Mean Absolute SHAP": 91.56333982320379,
+                "Importance Rank": 2
+            },
+            {
+                "Feature": "Recency",
+                "Mean Absolute SHAP": 88.44497315689561,
+                "Importance Rank": 3
+            },
+            {
+                "Feature": "Frequency",
+                "Mean Absolute SHAP": 84.28934480107876,
+                "Importance Rank": 4
+            },
+            {
+                "Feature": "Tenure",
+                "Mean Absolute SHAP": 33.68982143905288,
+                "Importance Rank": 5
+            },
+            {
+                "Feature": "AverageOrderValue",
+                "Mean Absolute SHAP": 26.610307584544515,
+                "Importance Rank": 6
+            }
+        ],
+        "top_value_increasing_factors": [
+            {
+                "Feature": "Monetary",
+                "Feature Value": 121631.72,
+                "SHAP Value": 6457.211885653887
+            },
+            {
+                "Feature": "TotalItems",
+                "Feature Value": 80774.0,
+                "SHAP Value": 5940.220985052648
+            },
+            {
+                "Feature": "Frequency",
+                "Feature Value": 22.0,
+                "SHAP Value": 4216.03021974843
+            }
+        ],
+        "top_value_decreasing_factors": [
+            {
+                "Feature": "Tenure",
+                "Feature Value": 428.0,
+                "SHAP Value": -247.75429551379608
+            }
+        ],
+        "artifacts": {
+            "global_importance": "artifacts\\explainability\\clv\\visualizations\\clv_global_feature_importance.png",
+            "beeswarm": "artifacts\\explainability\\clv\\visualizations\\clv_shap_beeswarm.png",
+            "customer_driver": "artifacts\\explainability\\clv\\visualizations\\example_customer_clv_drivers.png",
+            "customer_waterfall": "artifacts\\explainability\\clv\\visualizations\\example_customer_clv_waterfall.png",
+            "dashboard_shap_values": "artifacts\\explainability\\clv\\clv_dashboard_shap_values.csv"
+        },
+        "prediction_scale": "Original 90-day revenue scale",
+        "important_note": "The final CLV prediction function already returns values on the original revenue scale. No additional expm1 transformation is applied.",
+        "interpretation_note": "Positive SHAP values push predicted 90-day revenue upward relative to the model baseline. Negative SHAP values push it downward. SHAP explains model behavior and does not establish causality."
+    },
+    "dashboard_integration": {
+        "explainability_intelligence_page": true,
+        "customer_360_explainability_tab": true,
+        "global_explanations": true,
+        "customer_level_explanations": true,
+        "precomputed_explanation_lookup": true
+    },
+    "interpretation_rules": {
+        "churn_positive_shap": "Pushes the model churn prediction upward relative to the SHAP baseline.",
+        "churn_negative_shap": "Pushes the model churn prediction downward relative to the SHAP baseline.",
+        "clv_positive_shap": "Pushes predicted 90-day revenue upward relative to the SHAP baseline.",
+        "clv_negative_shap": "Pushes predicted 90-day revenue downward relative to the SHAP baseline."
+    },
+    "limitations": [
+        "SHAP explains the behavior of the trained models and does not establish causality.",
+        "Customer-level explanations are currently precomputed for a sample rather than the entire customer population.",
+        "Raw SHAP magnitudes from churn and revenue models should not be directly compared because the model outputs operate on different scales.",
+        "The CLV module predicts fixed-horizon future 90-day revenue and should not be described as literal lifetime revenue.",
+        "Recommendation scores are unrelated to SHAP probability interpretation and remain ranking signals rather than calibrated purchase probabilities."
+    ],
+    "validation_summary": {
+        "all_expected_artifacts_exist": true,
+        "core_explanation_datasets_valid": true,
+        "overall_status": "PASS"
+    }
+}

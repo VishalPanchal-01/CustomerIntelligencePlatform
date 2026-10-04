@@ -1,0 +1,73 @@
+{
+    "module": "Customer Predicted 90-Day Revenue",
+    "explanation_method": "SHAP",
+    "sample_size": 300,
+    "example_customer_id": "12415.0",
+    "example_predicted_90_day_revenue": 23953.692197424396,
+    "top_global_features": [
+        {
+            "Feature": "Monetary",
+            "Mean Absolute SHAP": 115.37119322279824,
+            "Importance Rank": 1
+        },
+        {
+            "Feature": "TotalItems",
+            "Mean Absolute SHAP": 91.56333982320379,
+            "Importance Rank": 2
+        },
+        {
+            "Feature": "Recency",
+            "Mean Absolute SHAP": 88.44497315689561,
+            "Importance Rank": 3
+        },
+        {
+            "Feature": "Frequency",
+            "Mean Absolute SHAP": 84.28934480107876,
+            "Importance Rank": 4
+        },
+        {
+            "Feature": "Tenure",
+            "Mean Absolute SHAP": 33.68982143905288,
+            "Importance Rank": 5
+        },
+        {
+            "Feature": "AverageOrderValue",
+            "Mean Absolute SHAP": 26.610307584544515,
+            "Importance Rank": 6
+        }
+    ],
+    "top_value_increasing_factors": [
+        {
+            "Feature": "Monetary",
+            "Feature Value": 121631.72,
+            "SHAP Value": 6457.211885653887
+        },
+        {
+            "Feature": "TotalItems",
+            "Feature Value": 80774.0,
+            "SHAP Value": 5940.220985052648
+        },
+        {
+            "Feature": "Frequency",
+            "Feature Value": 22.0,
+            "SHAP Value": 4216.03021974843
+        }
+    ],
+    "top_value_decreasing_factors": [
+        {
+            "Feature": "Tenure",
+            "Feature Value": 428.0,
+            "SHAP Value": -247.75429551379608
+        }
+    ],
+    "artifacts": {
+        "global_importance": "artifacts\\explainability\\clv\\visualizations\\clv_global_feature_importance.png",
+        "beeswarm": "artifacts\\explainability\\clv\\visualizations\\clv_shap_beeswarm.png",
+        "customer_driver": "artifacts\\explainability\\clv\\visualizations\\example_customer_clv_drivers.png",
+        "customer_waterfall": "artifacts\\explainability\\clv\\visualizations\\example_customer_clv_waterfall.png",
+        "dashboard_shap_values": "artifacts\\explainability\\clv\\clv_dashboard_shap_values.csv"
+    },
+    "prediction_scale": "Original 90-day revenue scale",
+    "important_note": "The final CLV prediction function already returns values on the original revenue scale. No additional expm1 transformation is applied.",
+    "interpretation_note": "Positive SHAP values push predicted 90-day revenue upward relative to the model baseline. Negative SHAP values push it downward. SHAP explains model behavior and does not establish causality."
+}

@@ -1,7 +1,14 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
+
+from dashboard.ui import (
+    render_color_card,
+    format_risk_badge,
+    format_clv_badge
+)
 
 
 CUSTOMER_ID = "Customer ID"
@@ -26,47 +33,9 @@ class ChurnIntelligence:
                 "Customer ID column not found."
             )
 
-        # -----------------------------------------------------
-        # Churn Probability
-        # -----------------------------------------------------
-
-        if (
-            "Churn Probability"
-            in data.columns
-        ):
-
-            data[
-                "Churn Probability"
-            ] = pd.to_numeric(
-                data[
-                    "Churn Probability"
-                ],
-                errors="coerce"
-            )
-
-        # -----------------------------------------------------
-        # Predicted Revenue
-        # -----------------------------------------------------
-
-        if (
-            "Predicted 90-Day Revenue"
-            in data.columns
-        ):
-
-            data[
-                "Predicted 90-Day Revenue"
-            ] = pd.to_numeric(
-                data[
-                    "Predicted 90-Day Revenue"
-                ],
-                errors="coerce"
-            )
-
-        # -----------------------------------------------------
-        # Customer behavioural variables
-        # -----------------------------------------------------
-
         numeric_columns = [
+            "Churn Probability",
+            "Predicted 90-Day Revenue",
             "Recency",
             "Frequency",
             "Monetary",
@@ -79,19 +48,16 @@ class ChurnIntelligence:
 
             if column in data.columns:
 
-                data[
-                    column
-                ] = pd.to_numeric(
-                    data[
-                        column
-                    ],
+                data[column] = pd.to_numeric(
+                    data[column],
                     errors="coerce"
                 )
 
         return data
 
+
     # =========================================================
-    # CHURN METRICS
+    # METRICS
     # =========================================================
 
     def calculate_metrics(
@@ -99,17 +65,14 @@ class ChurnIntelligence:
         df: pd.DataFrame
     ) -> dict:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         total_customers = int(
             data[
                 CUSTOMER_ID
-            ]
-            .nunique()
+            ].nunique()
         )
 
         # -----------------------------------------------------
@@ -145,12 +108,14 @@ class ChurnIntelligence:
                 data[
                     "Churn Risk"
                 ]
-                .fillna("")
+                .fillna(
+                    "Unknown"
+                )
                 .astype(str)
                 .str.lower()
             )
 
-            high_risk_customers = int(
+            high_risk = int(
                 (
                     normalized_risk
                     ==
@@ -159,7 +124,7 @@ class ChurnIntelligence:
                 .sum()
             )
 
-            medium_risk_customers = int(
+            medium_risk = int(
                 (
                     normalized_risk
                     ==
@@ -168,7 +133,7 @@ class ChurnIntelligence:
                 .sum()
             )
 
-            low_risk_customers = int(
+            low_risk = int(
                 (
                     normalized_risk
                     ==
@@ -179,18 +144,18 @@ class ChurnIntelligence:
 
         else:
 
-            high_risk_customers = 0
-            medium_risk_customers = 0
-            low_risk_customers = 0
+            high_risk = 0
+            medium_risk = 0
+            low_risk = 0
 
         # -----------------------------------------------------
-        # High-risk percentage
+        # High risk percentage
         # -----------------------------------------------------
 
         if total_customers > 0:
 
             high_risk_percentage = (
-                high_risk_customers
+                high_risk
                 /
                 total_customers
                 *
@@ -206,10 +171,10 @@ class ChurnIntelligence:
         # -----------------------------------------------------
 
         if (
-            "Predicted 90-Day Revenue"
+            "Churn Risk"
             in data.columns
             and
-            "Churn Risk"
+            "Predicted 90-Day Revenue"
             in data.columns
         ):
 
@@ -240,7 +205,7 @@ class ChurnIntelligence:
             revenue_at_risk = 0.0
 
         # -----------------------------------------------------
-        # High-value customers at risk
+        # High-value at risk
         # -----------------------------------------------------
 
         if (
@@ -287,18 +252,16 @@ class ChurnIntelligence:
                 average_churn_probability,
 
             "high_risk_customers":
-                high_risk_customers,
+                high_risk,
 
             "medium_risk_customers":
-                medium_risk_customers,
+                medium_risk,
 
             "low_risk_customers":
-                low_risk_customers,
+                low_risk,
 
             "high_risk_percentage":
-                float(
-                    high_risk_percentage
-                ),
+                high_risk_percentage,
 
             "revenue_at_risk":
                 revenue_at_risk,
@@ -306,6 +269,7 @@ class ChurnIntelligence:
             "high_value_at_risk":
                 high_value_at_risk
         }
+
 
     # =========================================================
     # RISK DISTRIBUTION
@@ -316,10 +280,8 @@ class ChurnIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         if (
@@ -327,26 +289,21 @@ class ChurnIntelligence:
             not in data.columns
         ):
 
-            return pd.DataFrame(
-                columns=[
-                    "Churn Risk",
-                    "Customers"
-                ]
-            )
+            return pd.DataFrame()
 
-        risk_order = [
+        order = [
             "High",
             "Medium",
             "Low"
         ]
 
-        result = (
+        return (
             data[
                 "Churn Risk"
             ]
             .value_counts()
             .reindex(
-                risk_order,
+                order,
                 fill_value=0
             )
             .rename_axis(
@@ -357,7 +314,6 @@ class ChurnIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
     # CHURN BY SEGMENT
@@ -368,18 +324,18 @@ class ChurnIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        if (
-            "Customer Segment"
-            not in data.columns
-            or
+        required = [
+            "Customer Segment",
             "Churn Probability"
-            not in data.columns
+        ]
+
+        if any(
+            column not in data.columns
+            for column in required
         ):
 
             return pd.DataFrame()
@@ -396,8 +352,11 @@ class ChurnIntelligence:
                 "high"
             )
             .astype(int)
-            if "Churn Risk" in data.columns
-            else 0
+            if
+            "Churn Risk"
+            in data.columns
+            else
+            0
         )
 
         aggregation = {
@@ -434,6 +393,7 @@ class ChurnIntelligence:
 
         result = result.rename(
             columns={
+
                 CUSTOMER_ID:
                     "Customers",
 
@@ -484,7 +444,7 @@ class ChurnIntelligence:
             2
         )
 
-        result = (
+        return (
             result
             .sort_values(
                 by=
@@ -498,7 +458,6 @@ class ChurnIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
     # REVENUE AT RISK BY SEGMENT
@@ -509,10 +468,8 @@ class ChurnIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         required = [
@@ -544,13 +501,7 @@ class ChurnIntelligence:
 
         if high_risk.empty:
 
-            return pd.DataFrame(
-                columns=[
-                    "Customer Segment",
-                    "High Risk Customers",
-                    "Revenue at Risk"
-                ]
-            )
+            return pd.DataFrame()
 
         result = (
             high_risk
@@ -575,18 +526,7 @@ class ChurnIntelligence:
             .reset_index()
         )
 
-        result[
-            "Revenue at Risk"
-        ] = (
-            result[
-                "Revenue at Risk"
-            ]
-            .round(
-                2
-            )
-        )
-
-        result = (
+        return (
             result
             .sort_values(
                 by=
@@ -600,7 +540,6 @@ class ChurnIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
     # HIGH VALUE AT RISK
@@ -612,10 +551,8 @@ class ChurnIntelligence:
         top_n: int = 50
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         required = [
@@ -660,6 +597,9 @@ class ChurnIntelligence:
         if (
             "Predicted 90-Day Revenue"
             in result.columns
+            and
+            "Churn Probability"
+            in result.columns
         ):
 
             result = (
@@ -669,26 +609,11 @@ class ChurnIntelligence:
                         "Churn Probability",
                         "Predicted 90-Day Revenue"
                     ],
+
                     ascending=[
                         False,
                         False
                     ]
-                )
-            )
-
-        elif (
-            "Churn Probability"
-            in result.columns
-        ):
-
-            result = (
-                result
-                .sort_values(
-                    by=
-                        "Churn Probability",
-
-                    ascending=
-                        False
                 )
             )
 
@@ -704,7 +629,8 @@ class ChurnIntelligence:
 
         available_columns = [
             column
-            for column in desired_columns
+            for column
+            in desired_columns
             if column in result.columns
         ]
 
@@ -720,8 +646,9 @@ class ChurnIntelligence:
             )
         )
 
+
     # =========================================================
-    # RETENTION PRIORITY TABLE
+    # RETENTION PRIORITY
     # =========================================================
 
     def retention_priority_customers(
@@ -730,10 +657,8 @@ class ChurnIntelligence:
         top_n: int = 100
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         if (
@@ -742,10 +667,6 @@ class ChurnIntelligence:
         ):
 
             return pd.DataFrame()
-
-        # -----------------------------------------------------
-        # Revenue
-        # -----------------------------------------------------
 
         if (
             "Predicted 90-Day Revenue"
@@ -794,13 +715,6 @@ class ChurnIntelligence:
                 index=data.index
             )
 
-        # -----------------------------------------------------
-        # Priority score
-        #
-        # 70% churn risk
-        # 30% predicted value
-        # -----------------------------------------------------
-
         churn_probability = (
             data[
                 "Churn Probability"
@@ -824,17 +738,8 @@ class ChurnIntelligence:
             0.30
             *
             normalized_revenue
-        )
-
-        data[
-            "Retention Priority Score"
-        ] = (
-            data[
-                "Retention Priority Score"
-            ]
-            .round(
-                4
-            )
+        ).round(
+            4
         )
 
         result = (
@@ -864,7 +769,8 @@ class ChurnIntelligence:
 
         available_columns = [
             column
-            for column in desired_columns
+            for column
+            in desired_columns
             if column in result.columns
         ]
 
@@ -877,6 +783,517 @@ class ChurnIntelligence:
             )
         )
 
+
+    # =========================================================
+    # KPI CARDS
+    # =========================================================
+
+    def _render_kpis(
+        self,
+        metrics: dict
+    ):
+
+        row1 = st.columns(
+            4
+        )
+
+        with row1[0]:
+
+            render_color_card(
+                title=
+                    "Customers",
+
+                value=
+                    f"{metrics['total_customers']:,}",
+
+                icon=
+                    "👥",
+
+                card_class=
+                    "card-blue"
+            )
+
+        with row1[1]:
+
+            render_color_card(
+                title=
+                    "Avg Churn Probability",
+
+                value=
+                    (
+                        f"{metrics['average_churn_probability'] * 100:.1f}%"
+                    ),
+
+                icon=
+                    "📊",
+
+                card_class=
+                    "card-purple"
+            )
+
+        with row1[2]:
+
+            render_color_card(
+                title=
+                    "High Risk Customers",
+
+                value=
+                    f"{metrics['high_risk_customers']:,}",
+
+                icon=
+                    "🔴",
+
+                card_class=
+                    "card-red"
+            )
+
+        with row1[3]:
+
+            render_color_card(
+                title=
+                    "High Risk %",
+
+                value=
+                    (
+                        f"{metrics['high_risk_percentage']:.1f}%"
+                    ),
+
+                icon=
+                    "⚠️",
+
+                card_class=
+                    "card-red"
+            )
+
+        st.write("")
+
+        row2 = st.columns(
+            3
+        )
+
+        with row2[0]:
+
+            render_color_card(
+                title=
+                    "Revenue at Risk",
+
+                value=
+                    (
+                        f"{metrics['revenue_at_risk']:,.0f}"
+                    ),
+
+                icon=
+                    "📉",
+
+                card_class=
+                    "card-red"
+            )
+
+        with row2[1]:
+
+            render_color_card(
+                title=
+                    "High-Value Customers at Risk",
+
+                value=
+                    (
+                        f"{metrics['high_value_at_risk']:,}"
+                    ),
+
+                icon=
+                    "💎",
+
+                card_class=
+                    "card-purple"
+            )
+
+        with row2[2]:
+
+            render_color_card(
+                title=
+                    "Medium Risk Customers",
+
+                value=
+                    (
+                        f"{metrics['medium_risk_customers']:,}"
+                    ),
+
+                icon=
+                    "🟠",
+
+                card_class=
+                    "card-blue"
+            )
+
+
+    # =========================================================
+    # RISK DONUT
+    # =========================================================
+
+    def _risk_donut(
+        self,
+        df: pd.DataFrame
+    ):
+
+        distribution = (
+            self.risk_distribution(
+                df
+            )
+        )
+
+        if distribution.empty:
+
+            return None
+
+        figure = px.pie(
+            distribution,
+
+            names=
+                "Churn Risk",
+
+            values=
+                "Customers",
+
+            hole=
+                0.58,
+
+            color=
+                "Churn Risk",
+
+            color_discrete_map={
+                "High":
+                    "#ef4444",
+
+                "Medium":
+                    "#f59e0b",
+
+                "Low":
+                    "#10b981"
+            },
+
+            title=
+                "Customer Churn Risk"
+        )
+
+        figure.update_traces(
+            textposition=
+                "inside",
+
+            textinfo=
+                "percent+label"
+        )
+
+        figure.update_layout(
+            height=380,
+            legend_title_text=""
+        )
+
+        return figure
+
+
+    # =========================================================
+    # CHURN GAUGE
+    # =========================================================
+
+    def _churn_gauge(
+        self,
+        metrics: dict
+    ):
+
+        value = (
+            metrics[
+                "average_churn_probability"
+            ]
+            *
+            100
+        )
+
+        figure = go.Figure(
+            go.Indicator(
+                mode=
+                    "gauge+number",
+
+                value=
+                    value,
+
+                number={
+                    "suffix":
+                        "%"
+                },
+
+                title={
+                    "text":
+                        "Average Churn Probability"
+                },
+
+                gauge={
+
+                    "axis": {
+                        "range": [
+                            0,
+                            100
+                        ]
+                    },
+
+                    "bar": {
+                        "color":
+                            "#7c3aed"
+                    },
+
+                    "steps": [
+
+                        {
+                            "range": [
+                                0,
+                                30
+                            ],
+
+                            "color":
+                                "#dcfce7"
+                        },
+
+                        {
+                            "range": [
+                                30,
+                                70
+                            ],
+
+                            "color":
+                                "#fef3c7"
+                        },
+
+                        {
+                            "range": [
+                                70,
+                                100
+                            ],
+
+                            "color":
+                                "#fee2e2"
+                        }
+                    ]
+                }
+            )
+        )
+
+        figure.update_layout(
+            height=330,
+            margin=dict(
+                l=20,
+                r=20,
+                t=60,
+                b=20
+            )
+        )
+
+        return figure
+
+
+    # =========================================================
+    # BEHAVIOR SCATTER
+    # =========================================================
+
+    def _behavior_scatter(
+        self,
+        data: pd.DataFrame,
+        feature: str
+    ):
+
+        plot_data = (
+            data[
+                data[
+                    feature
+                ]
+                .notna()
+                &
+                data[
+                    "Churn Probability"
+                ]
+                .notna()
+            ]
+            .copy()
+        )
+
+        if plot_data.empty:
+
+            return None
+
+        hover_columns = [
+            CUSTOMER_ID
+        ]
+
+        for column in [
+            "Customer Segment",
+            "Churn Risk",
+            "CLV Value Band",
+            "Predicted 90-Day Revenue"
+        ]:
+
+            if column in plot_data.columns:
+
+                hover_columns.append(
+                    column
+                )
+
+        figure = px.scatter(
+            plot_data,
+
+            x=
+                feature,
+
+            y=
+                "Churn Probability",
+
+            color=(
+                "Churn Risk"
+                if
+                "Churn Risk"
+                in plot_data.columns
+                else
+                None
+            ),
+
+            hover_data=
+                hover_columns,
+
+            color_discrete_map={
+                "High":
+                    "#ef4444",
+
+                "Medium":
+                    "#f59e0b",
+
+                "Low":
+                    "#10b981"
+            },
+
+            title=
+                (
+                    f"{feature} vs "
+                    f"Churn Probability"
+                )
+        )
+
+        figure.update_layout(
+            height=480
+        )
+
+        return figure
+
+
+    # =========================================================
+    # STYLED HIGH-RISK TABLE
+    # =========================================================
+
+    def _styled_high_risk_table(
+        self,
+        df: pd.DataFrame
+    ):
+
+        data = self.prepare_data(
+            df
+        )
+
+        columns = [
+            column
+            for column in [
+                CUSTOMER_ID,
+                "Customer Segment",
+                "Churn Probability",
+                "Churn Risk",
+                "Predicted 90-Day Revenue",
+                "CLV Value Band",
+                "Top Recommended Product"
+            ]
+            if column in data.columns
+        ]
+
+        if (
+            "Churn Probability"
+            not in data.columns
+        ):
+
+            return
+
+        table = (
+            data[
+                columns
+            ]
+            .sort_values(
+                by=
+                    "Churn Probability",
+
+                ascending=
+                    False
+            )
+            .head(
+                50
+            )
+            .copy()
+        )
+
+        if (
+            "Churn Probability"
+            in table.columns
+        ):
+
+            table[
+                "Churn Probability"
+            ] = (
+                table[
+                    "Churn Probability"
+                ]
+                *
+                100
+            ).round(
+                1
+            )
+
+            table[
+                "Churn Probability"
+            ] = (
+                table[
+                    "Churn Probability"
+                ]
+                .astype(str)
+                +
+                "%"
+            )
+
+        if (
+            "Churn Risk"
+            in table.columns
+        ):
+
+            table[
+                "Churn Risk"
+            ] = table[
+                "Churn Risk"
+            ].apply(
+                format_risk_badge
+            )
+
+        if (
+            "CLV Value Band"
+            in table.columns
+        ):
+
+            table[
+                "CLV Value Band"
+            ] = table[
+                "CLV Value Band"
+            ].apply(
+                format_clv_badge
+            )
+
+        st.dataframe(
+            table,
+            use_container_width=True,
+            hide_index=True,
+            height=480
+        )
+
+
     # =========================================================
     # RENDER
     # =========================================================
@@ -886,20 +1303,8 @@ class ChurnIntelligence:
         df: pd.DataFrame
     ):
 
-        data = (
-            self.prepare_data(
-                df
-            )
-        )
-
-        st.title(
-            "Churn Intelligence"
-        )
-
-        st.caption(
-            "Customer retention intelligence combining "
-            "predicted churn probability, customer value, "
-            "behaviour and revenue-at-risk analysis."
+        data = self.prepare_data(
+            df
         )
 
         if (
@@ -913,480 +1318,530 @@ class ChurnIntelligence:
 
             return
 
-        metrics = (
-            self.calculate_metrics(
-                data
-            )
+        metrics = self.calculate_metrics(
+            data
         )
 
         # =====================================================
-        # KPI ROW 1
+        # PAGE TITLE
         # =====================================================
 
-        col1, col2, col3, col4 = (
-            st.columns(
-                4
-            )
+        st.markdown(
+            "## ⚠️ Churn Intelligence"
         )
 
-        with col1:
-
-            st.metric(
-                "Customers",
-                f"{metrics['total_customers']:,}"
-            )
-
-        with col2:
-
-            st.metric(
-                "Average Churn Probability",
-                (
-                    f"{metrics['average_churn_probability'] * 100:.2f}%"
-                )
-            )
-
-        with col3:
-
-            st.metric(
-                "High Risk Customers",
-                f"{metrics['high_risk_customers']:,}"
-            )
-
-        with col4:
-
-            st.metric(
-                "High Risk %",
-                (
-                    f"{metrics['high_risk_percentage']:.2f}%"
-                )
-            )
-
-        # =====================================================
-        # KPI ROW 2
-        # =====================================================
-
-        col5, col6, col7 = (
-            st.columns(
-                3
-            )
+        st.caption(
+            "Interactive customer-retention intelligence "
+            "combining churn probability, behavioural "
+            "patterns, customer value and revenue risk."
         )
 
-        with col5:
+        # =====================================================
+        # KPI CARDS
+        # =====================================================
 
-            st.metric(
-                "90-Day Revenue at Risk",
-                (
-                    f"{metrics['revenue_at_risk']:,.2f}"
-                )
-            )
+        self._render_kpis(
+            metrics
+        )
 
-        with col6:
-
-            st.metric(
-                "High-Value Customers at Risk",
-                f"{metrics['high_value_at_risk']:,}"
-            )
-
-        with col7:
-
-            st.metric(
-                "Medium Risk Customers",
-                f"{metrics['medium_risk_customers']:,}"
-            )
-
+        st.write("")
         st.divider()
 
         # =====================================================
-        # DISTRIBUTION CHARTS
+        # TABS
         # =====================================================
 
-        left, right = (
-            st.columns(
+        tab1, tab2, tab3, tab4 = st.tabs(
+            [
+                "📊 Risk Overview",
+                "🧠 Behaviour Drivers",
+                "💰 Revenue Risk",
+                "🎯 Retention Priority"
+            ]
+        )
+
+        # =====================================================
+        # TAB 1
+        # =====================================================
+
+        with tab1:
+
+            col1, col2 = st.columns(
                 2
-            )
-        )
-
-        # -----------------------------------------------------
-        # Churn Probability
-        # -----------------------------------------------------
-
-        with left:
-
-            st.subheader(
-                "Churn Probability Distribution"
-            )
-
-            probability_data = (
-                data[
-                    data[
-                        "Churn Probability"
-                    ]
-                    .notna()
-                ]
-            )
-
-            probability_chart = (
-                px.histogram(
-                    probability_data,
-                    x=
-                        "Churn Probability",
-                    nbins=
-                        30,
-                    title=
-                        "Customer Churn Probability"
-                )
-            )
-
-            probability_chart.update_layout(
-                xaxis_title=
-                    "Churn Probability",
-
-                yaxis_title=
-                    "Customers"
-            )
-
-            st.plotly_chart(
-                probability_chart,
-                use_container_width=True
-            )
-
-        # -----------------------------------------------------
-        # Risk Distribution
-        # -----------------------------------------------------
-
-        with right:
-
-            st.subheader(
-                "Churn Risk Distribution"
-            )
-
-            risk_data = (
-                self.risk_distribution(
-                    data
-                )
-            )
-
-            risk_chart = (
-                px.bar(
-                    risk_data,
-                    x=
-                        "Churn Risk",
-                    y=
-                        "Customers",
-                    text=
-                        "Customers",
-                    title=
-                        "Customers by Churn Risk"
-                )
-            )
-
-            st.plotly_chart(
-                risk_chart,
-                use_container_width=True
-            )
-
-        st.divider()
-
-        # =====================================================
-        # SEGMENT ANALYSIS
-        # =====================================================
-
-        st.subheader(
-            "Churn by Customer Segment"
-        )
-
-        segment_data = (
-            self.churn_by_segment(
-                data
-            )
-        )
-
-        if segment_data.empty:
-
-            st.info(
-                "Customer Segment data is not available."
-            )
-
-        else:
-
-            col1, col2 = (
-                st.columns(
-                    2
-                )
             )
 
             with col1:
 
-                segment_chart = (
-                    px.bar(
-                        segment_data,
-                        x=
-                            "Customer Segment",
-                        y=
-                            "Average Churn Probability",
-                        text=
-                            "Average Churn Probability",
-                        title=
-                            (
-                                "Average Churn Probability "
-                                "by Segment"
-                            )
+                risk_donut = (
+                    self._risk_donut(
+                        data
                     )
                 )
 
-                st.plotly_chart(
-                    segment_chart,
-                    use_container_width=True
-                )
+                if risk_donut is not None:
+
+                    st.plotly_chart(
+                        risk_donut,
+                        use_container_width=True
+                    )
 
             with col2:
 
-                high_risk_chart = (
-                    px.bar(
-                        segment_data,
-                        x=
-                            "Customer Segment",
-                        y=
-                            "High Risk Customers",
-                        text=
-                            "High Risk Customers",
-                        title=
-                            "High-Risk Customers by Segment"
+                churn_gauge = (
+                    self._churn_gauge(
+                        metrics
                     )
                 )
 
                 st.plotly_chart(
-                    high_risk_chart,
+                    churn_gauge,
                     use_container_width=True
                 )
 
-            st.dataframe(
-                segment_data,
-                use_container_width=True,
-                hide_index=True
+            st.markdown(
+                "### 🧩 Churn by Customer Segment"
             )
 
-        st.divider()
-
-        # =====================================================
-        # CUSTOMER BEHAVIOUR VS CHURN
-        # =====================================================
-
-        st.subheader(
-            "Customer Behaviour vs Churn Probability"
-        )
-
-        behavior_options = [
-            column
-            for column in [
-                "Recency",
-                "Frequency",
-                "Monetary",
-                "TotalItems",
-                "AverageOrderValue",
-                "Tenure"
-            ]
-            if column in data.columns
-        ]
-
-        if behavior_options:
-
-            selected_feature = (
-                st.selectbox(
-                    "Select behavioural feature",
-                    options=
-                        behavior_options,
-                    key=
-                        "churn_behavior_feature"
+            segment_data = (
+                self.churn_by_segment(
+                    data
                 )
             )
 
-            plot_data = (
-                data[
-                    data[
-                        selected_feature
-                    ]
-                    .notna()
-                    &
-                    data[
-                        "Churn Probability"
-                    ]
-                    .notna()
-                ]
-                .copy()
-            )
+            if segment_data.empty:
 
-            hover_data = [
-                CUSTOMER_ID
-            ]
+                st.info(
+                    "Segment-level churn data "
+                    "is not available."
+                )
 
-            for column in [
-                "Customer Segment",
-                "Churn Risk",
-                "CLV Value Band",
-                "Predicted 90-Day Revenue"
-            ]:
+            else:
 
-                if column in plot_data.columns:
+                col3, col4 = st.columns(
+                    2
+                )
 
-                    hover_data.append(
-                        column
+                with col3:
+
+                    figure = px.bar(
+                        segment_data,
+
+                        x=
+                            "Customer Segment",
+
+                        y=
+                            "Average Churn Probability",
+
+                        color=
+                            "Average Churn Probability",
+
+                        text=
+                            "Average Churn Probability",
+
+                        color_continuous_scale=
+                            "Reds",
+
+                        title=
+                            "Average Churn Probability by Segment"
                     )
 
-            scatter = (
-                px.scatter(
-                    plot_data,
-                    x=
-                        selected_feature,
-                    y=
-                        "Churn Probability",
-                    color=(
-                        "Churn Risk"
-                        if "Churn Risk" in plot_data.columns
-                        else None
-                    ),
-                    hover_data=
-                        hover_data,
-                    title=
-                        (
-                            f"{selected_feature} "
-                            f"vs Churn Probability"
-                        )
+                    figure.update_layout(
+                        coloraxis_showscale=False
+                    )
+
+                    st.plotly_chart(
+                        figure,
+                        use_container_width=True
+                    )
+
+                with col4:
+
+                    figure = px.bar(
+                        segment_data,
+
+                        x=
+                            "Customer Segment",
+
+                        y=
+                            "High Risk Customers",
+
+                        color=
+                            "High Risk Customers",
+
+                        text=
+                            "High Risk Customers",
+
+                        color_continuous_scale=
+                            "Oranges",
+
+                        title=
+                            "High-Risk Customers by Segment"
+                    )
+
+                    figure.update_layout(
+                        coloraxis_showscale=False
+                    )
+
+                    st.plotly_chart(
+                        figure,
+                        use_container_width=True
+                    )
+
+                st.dataframe(
+                    segment_data,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+        # =====================================================
+        # TAB 2 — BEHAVIOUR
+        # =====================================================
+
+        with tab2:
+
+            st.markdown(
+                "### 🧠 Customer Behaviour vs Churn"
+            )
+
+            behavior_options = [
+                column
+                for column in [
+                    "Recency",
+                    "Frequency",
+                    "Monetary",
+                    "TotalItems",
+                    "AverageOrderValue",
+                    "Tenure"
+                ]
+                if column in data.columns
+            ]
+
+            if not behavior_options:
+
+                st.info(
+                    "Customer behavioral features "
+                    "are not available."
+                )
+
+            else:
+
+                selected_feature = (
+                    st.selectbox(
+                        "Select customer behaviour feature",
+
+                        options=
+                            behavior_options,
+
+                        key=
+                            "premium_churn_behavior"
+                    )
+                )
+
+                scatter = (
+                    self._behavior_scatter(
+                        data,
+                        selected_feature
+                    )
+                )
+
+                if scatter is not None:
+
+                    st.plotly_chart(
+                        scatter,
+                        use_container_width=True
+                    )
+
+                st.info(
+                    "Use hover to inspect individual customers. "
+                    "The chart shows association with churn "
+                    "probability, not causal impact."
+                )
+
+                # ---------------------------------------------
+                # Distribution by churn risk
+                # ---------------------------------------------
+
+                if (
+                    "Churn Risk"
+                    in data.columns
+                ):
+
+                    box_data = (
+                        data[
+                            data[
+                                selected_feature
+                            ]
+                            .notna()
+                        ]
+                    )
+
+                    box_chart = px.box(
+                        box_data,
+
+                        x=
+                            "Churn Risk",
+
+                        y=
+                            selected_feature,
+
+                        color=
+                            "Churn Risk",
+
+                        points=
+                            "outliers",
+
+                        color_discrete_map={
+                            "High":
+                                "#ef4444",
+
+                            "Medium":
+                                "#f59e0b",
+
+                            "Low":
+                                "#10b981"
+                        },
+
+                        title=
+                            (
+                                f"{selected_feature} Distribution "
+                                f"by Churn Risk"
+                            )
+                    )
+
+                    st.plotly_chart(
+                        box_chart,
+                        use_container_width=True
+                    )
+
+        # =====================================================
+        # TAB 3 — REVENUE RISK
+        # =====================================================
+
+        with tab3:
+
+            st.markdown(
+                "### 💰 Revenue at Risk"
+            )
+
+            risk_revenue = (
+                self.revenue_at_risk_by_segment(
+                    data
                 )
             )
 
-            st.plotly_chart(
-                scatter,
-                use_container_width=True
-            )
+            if risk_revenue.empty:
 
-        else:
+                st.info(
+                    "Revenue-at-risk analysis "
+                    "is not available."
+                )
 
-            st.info(
-                "Customer behavioural features "
-                "are not available."
-            )
+            else:
 
-        st.divider()
-
-        # =====================================================
-        # REVENUE AT RISK
-        # =====================================================
-
-        st.subheader(
-            "Revenue at Risk by Customer Segment"
-        )
-
-        risk_revenue = (
-            self.revenue_at_risk_by_segment(
-                data
-            )
-        )
-
-        if risk_revenue.empty:
-
-            st.info(
-                "Revenue-at-risk analysis requires "
-                "segment, churn risk and predicted revenue."
-            )
-
-        else:
-
-            revenue_chart = (
-                px.bar(
+                figure = px.bar(
                     risk_revenue,
+
                     x=
                         "Customer Segment",
+
                     y=
                         "Revenue at Risk",
+
+                    color=
+                        "Revenue at Risk",
+
                     text=
                         "Revenue at Risk",
+
                     hover_data=[
                         "High Risk Customers"
                     ],
+
+                    color_continuous_scale=
+                        "Reds",
+
                     title=
-                        "Predicted 90-Day Revenue at Risk"
+                        "Predicted Revenue at Risk by Segment"
+                )
+
+                figure.update_layout(
+                    coloraxis_showscale=False
+                )
+
+                st.plotly_chart(
+                    figure,
+                    use_container_width=True
+                )
+
+                st.dataframe(
+                    risk_revenue,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+            st.markdown(
+                "### 💎 High-Value Customers at Risk"
+            )
+
+            high_value_risk = (
+                self.high_value_customers_at_risk(
+                    data,
+                    top_n=50
                 )
             )
 
-            st.plotly_chart(
-                revenue_chart,
-                use_container_width=True
-            )
+            if high_value_risk.empty:
 
-            st.dataframe(
-                risk_revenue,
-                use_container_width=True,
-                hide_index=True
-            )
+                st.success(
+                    "No High CLV + High Churn Risk customers "
+                    "were found for the current filters."
+                )
 
-        st.divider()
+            else:
+
+                display = (
+                    high_value_risk.copy()
+                )
+
+                if (
+                    "Churn Risk"
+                    in display.columns
+                ):
+
+                    display[
+                        "Churn Risk"
+                    ] = display[
+                        "Churn Risk"
+                    ].apply(
+                        format_risk_badge
+                    )
+
+                if (
+                    "CLV Value Band"
+                    in display.columns
+                ):
+
+                    display[
+                        "CLV Value Band"
+                    ] = display[
+                        "CLV Value Band"
+                    ].apply(
+                        format_clv_badge
+                    )
+
+                st.dataframe(
+                    display,
+                    use_container_width=True,
+                    hide_index=True
+                )
 
         # =====================================================
-        # HIGH-VALUE AT-RISK CUSTOMERS
+        # TAB 4 — RETENTION
         # =====================================================
 
-        st.subheader(
-            "High-Value Customers at Risk"
-        )
+        with tab4:
 
-        high_value_risk = (
-            self.high_value_customers_at_risk(
-                data,
-                top_n=50
-            )
-        )
-
-        if high_value_risk.empty:
-
-            st.info(
-                "No High CLV + High Churn Risk "
-                "customers found for the current filters."
+            st.markdown(
+                "### 🎯 Retention Priority Customers"
             )
 
-        else:
-
-            st.dataframe(
-                high_value_risk,
-                use_container_width=True,
-                hide_index=True
+            st.caption(
+                "Retention Priority Score = "
+                "70% churn probability + "
+                "30% normalized predicted 90-day revenue."
             )
 
-        st.divider()
-
-        # =====================================================
-        # RETENTION PRIORITY
-        # =====================================================
-
-        st.subheader(
-            "Retention Priority Customers"
-        )
-
-        st.caption(
-            "Retention Priority Score combines "
-            "70% churn probability and "
-            "30% normalized predicted 90-day revenue. "
-            "This is a decision-support ranking rule, "
-            "not a separate machine-learning model."
-        )
-
-        retention_table = (
-            self.retention_priority_customers(
-                data,
-                top_n=100
-            )
-        )
-
-        if retention_table.empty:
-
-            st.info(
-                "Retention priority data is not available."
+            retention = (
+                self.retention_priority_customers(
+                    data,
+                    top_n=100
+                )
             )
 
-        else:
+            if retention.empty:
 
-            st.dataframe(
-                retention_table,
-                use_container_width=True,
-                hide_index=True
+                st.info(
+                    "Retention priority data "
+                    "is not available."
+                )
+
+            else:
+
+                display = (
+                    retention.copy()
+                )
+
+                if (
+                    "Churn Risk"
+                    in display.columns
+                ):
+
+                    display[
+                        "Churn Risk"
+                    ] = display[
+                        "Churn Risk"
+                    ].apply(
+                        format_risk_badge
+                    )
+
+                if (
+                    "CLV Value Band"
+                    in display.columns
+                ):
+
+                    display[
+                        "CLV Value Band"
+                    ] = display[
+                        "CLV Value Band"
+                    ].apply(
+                        format_clv_badge
+                    )
+
+                if (
+                    "Churn Probability"
+                    in display.columns
+                ):
+
+                    display[
+                        "Churn Probability"
+                    ] = (
+                        display[
+                            "Churn Probability"
+                        ]
+                        *
+                        100
+                    ).round(
+                        1
+                    )
+
+                    display[
+                        "Churn Probability"
+                    ] = (
+                        display[
+                            "Churn Probability"
+                        ]
+                        .astype(str)
+                        +
+                        "%"
+                    )
+
+                st.dataframe(
+                    display,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=500
+                )
+
+            st.warning(
+                "Retention Priority Score is a "
+                "business ranking rule. It is not "
+                "another trained machine-learning model."
+            )
+
+            st.markdown(
+                "### 🔥 Highest Churn Risk Customers"
+            )
+
+            self._styled_high_risk_table(
+                data
             )

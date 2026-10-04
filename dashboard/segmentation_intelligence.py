@@ -1,7 +1,14 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
+
+from dashboard.ui import (
+    render_color_card,
+    format_risk_badge,
+    format_clv_badge
+)
 
 
 CUSTOMER_ID = "Customer ID"
@@ -9,13 +16,26 @@ CUSTOMER_ID = "Customer ID"
 
 class SegmentationIntelligence:
 
-    def prepare_data(self,df: pd.DataFrame) -> pd.DataFrame:
+    # =========================================================
+    # PREPARE DATA
+    # =========================================================
+
+    def prepare_data(
+        self,
+        df: pd.DataFrame
+    ) -> pd.DataFrame:
+
         data = df.copy()
 
         if CUSTOMER_ID not in data.columns:
-            raise ValueError("Customer ID column not found.")
-        if ("Customer Segment" not in data.columns):
-            raise ValueError("Customer Segment column not found.")
+            raise ValueError(
+                "Customer ID column not found."
+            )
+
+        if "Customer Segment" not in data.columns:
+            raise ValueError(
+                "Customer Segment column not found."
+            )
 
         numeric_columns = [
             "Recency",
@@ -32,31 +52,22 @@ class SegmentationIntelligence:
 
             if column in data.columns:
 
-                data[
-                    column
-                ] = pd.to_numeric(
-                    data[
-                        column
-                    ],
+                data[column] = pd.to_numeric(
+                    data[column],
                     errors="coerce"
                 )
 
-        data[
-            "Customer Segment"
-        ] = (
-            data[
-                "Customer Segment"
-            ]
-            .fillna(
-                "Unknown"
-            )
+        data["Customer Segment"] = (
+            data["Customer Segment"]
+            .fillna("Unknown")
             .astype(str)
         )
 
         return data
 
+
     # =========================================================
-    # OVERVIEW METRICS
+    # METRICS
     # =========================================================
 
     def calculate_metrics(
@@ -64,38 +75,29 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ) -> dict:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         total_customers = int(
-            data[
-                CUSTOMER_ID
-            ]
-            .nunique()
+            data[CUSTOMER_ID].nunique()
         )
 
         segment_count = int(
-            data[
-                "Customer Segment"
-            ]
-            .nunique()
+            data["Customer Segment"].nunique()
         )
 
-        # -----------------------------------------------------
-        # Largest segment
-        # -----------------------------------------------------
-
         segment_counts = (
-            data[
-                "Customer Segment"
-            ]
+            data["Customer Segment"]
             .value_counts()
         )
 
-        if not segment_counts.empty:
+        if segment_counts.empty:
+
+            largest_segment = "N/A"
+            largest_segment_customers = 0
+
+        else:
 
             largest_segment = str(
                 segment_counts.index[0]
@@ -105,34 +107,29 @@ class SegmentationIntelligence:
                 segment_counts.iloc[0]
             )
 
-        else:
-
-            largest_segment = "N/A"
-            largest_segment_customers = 0
-
         # -----------------------------------------------------
         # Highest revenue segment
         # -----------------------------------------------------
 
-        if (
-            "Predicted 90-Day Revenue"
-            in data.columns
-        ):
+        if "Predicted 90-Day Revenue" in data.columns:
 
             revenue_by_segment = (
                 data
                 .groupby(
                     "Customer Segment"
-                )[
-                    "Predicted 90-Day Revenue"
-                ]
+                )["Predicted 90-Day Revenue"]
                 .sum()
                 .sort_values(
                     ascending=False
                 )
             )
 
-            if not revenue_by_segment.empty:
+            if revenue_by_segment.empty:
+
+                highest_revenue_segment = "N/A"
+                highest_revenue_value = 0.0
+
+            else:
 
                 highest_revenue_segment = str(
                     revenue_by_segment.index[0]
@@ -141,11 +138,6 @@ class SegmentationIntelligence:
                 highest_revenue_value = float(
                     revenue_by_segment.iloc[0]
                 )
-
-            else:
-
-                highest_revenue_segment = "N/A"
-                highest_revenue_value = 0.0
 
         else:
 
@@ -156,25 +148,25 @@ class SegmentationIntelligence:
         # Highest churn segment
         # -----------------------------------------------------
 
-        if (
-            "Churn Probability"
-            in data.columns
-        ):
+        if "Churn Probability" in data.columns:
 
             churn_by_segment = (
                 data
                 .groupby(
                     "Customer Segment"
-                )[
-                    "Churn Probability"
-                ]
+                )["Churn Probability"]
                 .mean()
                 .sort_values(
                     ascending=False
                 )
             )
 
-            if not churn_by_segment.empty:
+            if churn_by_segment.empty:
+
+                highest_churn_segment = "N/A"
+                highest_churn_probability = 0.0
+
+            else:
 
                 highest_churn_segment = str(
                     churn_by_segment.index[0]
@@ -184,18 +176,12 @@ class SegmentationIntelligence:
                     churn_by_segment.iloc[0]
                 )
 
-            else:
-
-                highest_churn_segment = "N/A"
-                highest_churn_probability = 0.0
-
         else:
 
             highest_churn_segment = "N/A"
             highest_churn_probability = 0.0
 
         return {
-
             "total_customers":
                 total_customers,
 
@@ -221,6 +207,7 @@ class SegmentationIntelligence:
                 highest_churn_probability
         }
 
+
     # =========================================================
     # SEGMENT DISTRIBUTION
     # =========================================================
@@ -230,24 +217,17 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        total_customers = max(
-            data[
-                CUSTOMER_ID
-            ]
-            .nunique(),
+        total = max(
+            data[CUSTOMER_ID].nunique(),
             1
         )
 
         result = (
-            data[
-                "Customer Segment"
-            ]
+            data["Customer Segment"]
             .value_counts()
             .rename_axis(
                 "Customer Segment"
@@ -257,14 +237,10 @@ class SegmentationIntelligence:
             )
         )
 
-        result[
-            "Customer Percentage"
-        ] = (
-            result[
-                "Customers"
-            ]
+        result["Customer Percentage"] = (
+            result["Customers"]
             /
-            total_customers
+            total
             *
             100
         ).round(
@@ -272,6 +248,7 @@ class SegmentationIntelligence:
         )
 
         return result
+
 
     # =========================================================
     # SEGMENT PROFILE
@@ -282,10 +259,8 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         features = [
@@ -302,16 +277,13 @@ class SegmentationIntelligence:
         ]
 
         if not features:
-
             return pd.DataFrame()
 
-        result = (
+        return (
             data
             .groupby(
                 "Customer Segment"
-            )[
-                features
-            ]
+            )[features]
             .mean()
             .round(
                 2
@@ -319,10 +291,78 @@ class SegmentationIntelligence:
             .reset_index()
         )
 
-        return result
 
     # =========================================================
-    # SEGMENT BUSINESS PERFORMANCE
+    # NORMALIZED PROFILE FOR RADAR
+    # =========================================================
+
+    def normalized_segment_profile(
+        self,
+        df: pd.DataFrame
+    ) -> pd.DataFrame:
+
+        profile = self.segment_profile(
+            df
+        )
+
+        if profile.empty:
+            return pd.DataFrame()
+
+        features = [
+            column
+            for column in profile.columns
+            if column != "Customer Segment"
+        ]
+
+        normalized = profile.copy()
+
+        for feature in features:
+
+            minimum = float(
+                profile[feature].min()
+            )
+
+            maximum = float(
+                profile[feature].max()
+            )
+
+            if maximum > minimum:
+
+                normalized[feature] = (
+                    (
+                        profile[feature]
+                        -
+                        minimum
+                    )
+                    /
+                    (
+                        maximum
+                        -
+                        minimum
+                    )
+                    *
+                    100
+                )
+
+            else:
+
+                normalized[feature] = 50.0
+
+        # Recency is inverse:
+        # lower recency = more recently active
+        if "Recency" in normalized.columns:
+
+            normalized["Recency"] = (
+                100
+                -
+                normalized["Recency"]
+            )
+
+        return normalized
+
+
+    # =========================================================
+    # BUSINESS PERFORMANCE
     # =========================================================
 
     def segment_business_performance(
@@ -330,46 +370,39 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        data[
-            "High Risk Indicator"
-        ] = (
-            data[
-                "Churn Risk"
-            ]
-            .astype(str)
-            .str.lower()
-            .eq(
-                "high"
-            )
-            .astype(int)
-            if "Churn Risk" in data.columns
-            else 0
-        )
+        if "Churn Risk" in data.columns:
 
-        data[
-            "High Value Indicator"
-        ] = (
-            data[
-                "CLV Value Band"
-            ]
-            .astype(str)
-            .str.lower()
-            .eq(
-                "high"
+            data["High Risk Indicator"] = (
+                data["Churn Risk"]
+                .astype(str)
+                .str.lower()
+                .eq("high")
+                .astype(int)
             )
-            .astype(int)
-            if "CLV Value Band" in data.columns
-            else 0
-        )
+
+        else:
+
+            data["High Risk Indicator"] = 0
+
+        if "CLV Value Band" in data.columns:
+
+            data["High Value Indicator"] = (
+                data["CLV Value Band"]
+                .astype(str)
+                .str.lower()
+                .eq("high")
+                .astype(int)
+            )
+
+        else:
+
+            data["High Value Indicator"] = 0
 
         aggregation = {
-
             CUSTOMER_ID:
                 "nunique",
 
@@ -380,19 +413,13 @@ class SegmentationIntelligence:
                 "sum"
         }
 
-        if (
-            "Churn Probability"
-            in data.columns
-        ):
+        if "Churn Probability" in data.columns:
 
             aggregation[
                 "Churn Probability"
             ] = "mean"
 
-        if (
-            "Predicted 90-Day Revenue"
-            in data.columns
-        ):
+        if "Predicted 90-Day Revenue" in data.columns:
 
             aggregation[
                 "Predicted 90-Day Revenue"
@@ -411,10 +438,6 @@ class SegmentationIntelligence:
             )
         )
 
-        # -----------------------------------------------------
-        # Flatten columns
-        # -----------------------------------------------------
-
         result.columns = [
             (
                 " ".join(
@@ -428,22 +451,15 @@ class SegmentationIntelligence:
                     column,
                     tuple
                 )
-                else str(
-                    column
-                )
+                else str(column)
             )
-            for column
-            in result.columns
+            for column in result.columns
         ]
 
-        result = (
-            result
-            .reset_index()
-        )
+        result = result.reset_index()
 
         result = result.rename(
             columns={
-
                 f"{CUSTOMER_ID} nunique":
                     "Customers",
 
@@ -464,31 +480,18 @@ class SegmentationIntelligence:
             }
         )
 
-        # -----------------------------------------------------
-        # Percentage metrics
-        # -----------------------------------------------------
-
-        if (
-            "Customers"
-            in result.columns
-        ):
+        if "Customers" in result.columns:
 
             denominator = (
-                result[
-                    "Customers"
-                ]
+                result["Customers"]
                 .replace(
                     0,
                     np.nan
                 )
             )
 
-            result[
-                "High Risk %"
-            ] = (
-                result[
-                    "High Risk Customers"
-                ]
+            result["High Risk %"] = (
+                result["High Risk Customers"]
                 /
                 denominator
                 *
@@ -497,12 +500,8 @@ class SegmentationIntelligence:
                 0
             )
 
-            result[
-                "High Value %"
-            ] = (
-                result[
-                    "High Value Customers"
-                ]
+            result["High Value %"] = (
+                result["High Value Customers"]
                 /
                 denominator
                 *
@@ -519,18 +518,15 @@ class SegmentationIntelligence:
             .columns
         )
 
-        result[
-            numeric_columns
-        ] = (
-            result[
-                numeric_columns
-            ]
+        result[numeric_columns] = (
+            result[numeric_columns]
             .round(
                 2
             )
         )
 
         return result
+
 
     # =========================================================
     # REVENUE CONTRIBUTION
@@ -541,17 +537,14 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         if (
             "Predicted 90-Day Revenue"
             not in data.columns
         ):
-
             return pd.DataFrame()
 
         result = (
@@ -616,12 +609,8 @@ class SegmentationIntelligence:
             "Revenue Contribution %"
         ]
 
-        result[
-            numeric_columns
-        ] = (
-            result[
-                numeric_columns
-            ]
+        result[numeric_columns] = (
+            result[numeric_columns]
             .round(
                 2
             )
@@ -632,16 +621,17 @@ class SegmentationIntelligence:
             .sort_values(
                 by=
                     "Total Predicted Revenue",
-                ascending=
-                    False
+
+                ascending=False
             )
             .reset_index(
                 drop=True
             )
         )
 
+
     # =========================================================
-    # CHURN EXPOSURE BY SEGMENT
+    # CHURN COMPOSITION
     # =========================================================
 
     def churn_exposure(
@@ -649,20 +639,15 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        if (
-            "Churn Risk"
-            not in data.columns
-        ):
+        if "Churn Risk" not in data.columns:
 
             return pd.DataFrame()
 
-        result = (
+        return (
             data
             .groupby(
                 [
@@ -676,7 +661,6 @@ class SegmentationIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
     # CLV COMPOSITION
@@ -687,20 +671,15 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        if (
-            "CLV Value Band"
-            not in data.columns
-        ):
+        if "CLV Value Band" not in data.columns:
 
             return pd.DataFrame()
 
-        result = (
+        return (
             data
             .groupby(
                 [
@@ -714,104 +693,9 @@ class SegmentationIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
-    # SEGMENT PRIORITY PROFILE
-    # =========================================================
-
-    def priority_profile(
-        self,
-        df: pd.DataFrame
-    ) -> pd.DataFrame:
-
-        data = (
-            self.prepare_data(
-                df
-            )
-        )
-
-        # -----------------------------------------------------
-        # Create rule-based priority
-        # -----------------------------------------------------
-
-        def assign_priority(
-            row
-        ):
-
-            churn = str(
-                row.get(
-                    "Churn Risk",
-                    ""
-                )
-            ).lower()
-
-            clv = str(
-                row.get(
-                    "CLV Value Band",
-                    ""
-                )
-            ).lower()
-
-            if (
-                churn == "high"
-                and
-                clv == "high"
-            ):
-
-                return "Critical"
-
-            if (
-                (
-                    churn == "high"
-                    and
-                    clv == "medium"
-                )
-                or
-                (
-                    churn == "medium"
-                    and
-                    clv == "high"
-                )
-            ):
-
-                return "High"
-
-            if (
-                churn == "high"
-                or
-                clv == "high"
-            ):
-
-                return "Medium"
-
-            return "Low"
-
-        data[
-            "Customer Priority"
-        ] = data.apply(
-            assign_priority,
-            axis=1
-        )
-
-        result = (
-            data
-            .groupby(
-                [
-                    "Customer Segment",
-                    "Customer Priority"
-                ]
-            )
-            .size()
-            .reset_index(
-                name="Customers"
-            )
-        )
-
-        return result
-
-    # =========================================================
-    # SEGMENT BUSINESS ACTIONS
+    # SEGMENT STRATEGY
     # =========================================================
 
     def segment_actions(
@@ -826,21 +710,11 @@ class SegmentationIntelligence:
         )
 
         if performance.empty:
-
             return pd.DataFrame()
 
         rows = []
 
-        for _, row in (
-            performance
-            .iterrows()
-        ):
-
-            segment = (
-                row[
-                    "Customer Segment"
-                ]
-            )
+        for _, row in performance.iterrows():
 
             high_risk_percentage = float(
                 row.get(
@@ -856,10 +730,6 @@ class SegmentationIntelligence:
                 )
             )
 
-            # -------------------------------------------------
-            # Business interpretation
-            # -------------------------------------------------
-
             if (
                 high_risk_percentage >= 40
                 and
@@ -867,59 +737,73 @@ class SegmentationIntelligence:
             ):
 
                 action = (
-                    "High-priority retention segment. "
-                    "Use personalized retention offers "
-                    "and proactive engagement."
+                    "Immediate retention focus with "
+                    "personalized offers and proactive outreach."
                 )
 
-            elif (
-                high_risk_percentage >= 40
-            ):
-
-                action = (
-                    "Retention-focused segment. "
-                    "Investigate disengagement and "
-                    "run reactivation campaigns."
+                strategy_type = (
+                    "Retention Priority"
                 )
 
-            elif (
-                high_value_percentage >= 40
-            ):
+            elif high_risk_percentage >= 40:
 
                 action = (
-                    "High-value growth segment. "
-                    "Use loyalty, cross-sell and "
-                    "premium recommendations."
+                    "Run reactivation campaigns and "
+                    "investigate declining customer engagement."
                 )
 
-            elif (
-                high_value_percentage >= 20
-            ):
+                strategy_type = (
+                    "Reactivation"
+                )
+
+            elif high_value_percentage >= 40:
 
                 action = (
-                    "Growth opportunity segment. "
-                    "Use targeted cross-sell and "
-                    "personalized recommendations."
+                    "Use loyalty programs, premium offers "
+                    "and personalized cross-sell opportunities."
+                )
+
+                strategy_type = (
+                    "Growth"
+                )
+
+            elif high_value_percentage >= 20:
+
+                action = (
+                    "Develop customer value through targeted "
+                    "cross-sell and recommendation campaigns."
+                )
+
+                strategy_type = (
+                    "Development"
                 )
 
             else:
 
                 action = (
-                    "Maintain engagement and monitor "
-                    "behaviour for changes in value "
-                    "or churn risk."
+                    "Maintain regular engagement and monitor "
+                    "changes in customer behaviour."
+                )
+
+                strategy_type = (
+                    "Maintain"
                 )
 
             rows.append(
                 {
                     "Customer Segment":
-                        segment,
+                        row[
+                            "Customer Segment"
+                        ],
 
                     "High Risk %":
                         high_risk_percentage,
 
                     "High Value %":
                         high_value_percentage,
+
+                    "Strategy":
+                        strategy_type,
 
                     "Recommended Segment Strategy":
                         action
@@ -930,8 +814,9 @@ class SegmentationIntelligence:
             rows
         )
 
+
     # =========================================================
-    # CUSTOMER TABLE BY SEGMENT
+    # SEGMENT CUSTOMERS
     # =========================================================
 
     def segment_customers(
@@ -941,10 +826,8 @@ class SegmentationIntelligence:
         top_n: int = 100
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         result = (
@@ -963,15 +846,11 @@ class SegmentationIntelligence:
             in result.columns
         ):
 
-            result = (
-                result
-                .sort_values(
-                    by=
-                        "Predicted 90-Day Revenue",
+            result = result.sort_values(
+                by=
+                    "Predicted 90-Day Revenue",
 
-                    ascending=
-                        False
-                )
+                ascending=False
             )
 
         desired_columns = [
@@ -980,6 +859,7 @@ class SegmentationIntelligence:
             "Recency",
             "Frequency",
             "Monetary",
+            "TotalItems",
             "AverageOrderValue",
             "Tenure",
             "Churn Probability",
@@ -1007,6 +887,340 @@ class SegmentationIntelligence:
             )
         )
 
+
+    # =========================================================
+    # COLOR KPI CARDS
+    # =========================================================
+
+    def _render_kpis(
+        self,
+        metrics: dict
+    ):
+
+        cols = st.columns(
+            4
+        )
+
+        with cols[0]:
+
+            render_color_card(
+                title=
+                    "Customers",
+
+                value=
+                    f"{metrics['total_customers']:,}",
+
+                icon=
+                    "👥",
+
+                card_class=
+                    "card-blue"
+            )
+
+        with cols[1]:
+
+            render_color_card(
+                title=
+                    "Customer Segments",
+
+                value=
+                    metrics[
+                        "segment_count"
+                    ],
+
+                icon=
+                    "🧩",
+
+                card_class=
+                    "card-purple"
+            )
+
+        with cols[2]:
+
+            render_color_card(
+                title=
+                    "Largest Segment",
+
+                value=
+                    metrics[
+                        "largest_segment"
+                    ],
+
+                icon=
+                    "🏆",
+
+                card_class=
+                    "card-green"
+            )
+
+        with cols[3]:
+
+            render_color_card(
+                title=
+                    "Highest Revenue Segment",
+
+                value=
+                    metrics[
+                        "highest_revenue_segment"
+                    ],
+
+                icon=
+                    "💰",
+
+                card_class=
+                    "card-green"
+            )
+
+        st.write("")
+
+        cols2 = st.columns(
+            2
+        )
+
+        with cols2[0]:
+
+            render_color_card(
+                title=
+                    "Customers in Largest Segment",
+
+                value=
+                    f"{metrics['largest_segment_customers']:,}",
+
+                icon=
+                    "📊",
+
+                card_class=
+                    "card-blue"
+            )
+
+        with cols2[1]:
+
+            render_color_card(
+                title=
+                    "Highest Avg Churn Segment",
+
+                value=
+                    metrics[
+                        "highest_churn_segment"
+                    ],
+
+                icon=
+                    "⚠️",
+
+                card_class=
+                    "card-red"
+            )
+
+
+    # =========================================================
+    # RADAR CHART
+    # =========================================================
+
+    def _segment_radar(
+        self,
+        df: pd.DataFrame
+    ):
+
+        profile = (
+            self.normalized_segment_profile(
+                df
+            )
+        )
+
+        if profile.empty:
+            return None
+
+        features = [
+            column
+            for column in profile.columns
+            if column != "Customer Segment"
+        ]
+
+        figure = go.Figure()
+
+        for _, row in profile.iterrows():
+
+            values = [
+                float(
+                    row[feature]
+                )
+                for feature in features
+            ]
+
+            values += [
+                values[0]
+            ]
+
+            categories = (
+                features
+                +
+                [
+                    features[0]
+                ]
+            )
+
+            figure.add_trace(
+                go.Scatterpolar(
+                    r=
+                        values,
+
+                    theta=
+                        categories,
+
+                    fill=
+                        "toself",
+
+                    name=
+                        row[
+                            "Customer Segment"
+                        ],
+
+                    opacity=
+                        0.55
+                )
+            )
+
+        figure.update_layout(
+            polar={
+                "radialaxis": {
+                    "visible":
+                        True,
+
+                    "range": [
+                        0,
+                        100
+                    ]
+                }
+            },
+
+            title=
+                "Normalized Behavioral Profile",
+
+            height=
+                550,
+
+            showlegend=
+                True
+        )
+
+        return figure
+
+
+    # =========================================================
+    # SEGMENT TREEMAP
+    # =========================================================
+
+    def _segment_treemap(
+        self,
+        df: pd.DataFrame
+    ):
+
+        distribution = (
+            self.segment_distribution(
+                df
+            )
+        )
+
+        if distribution.empty:
+            return None
+
+        figure = px.treemap(
+            distribution,
+
+            path=[
+                "Customer Segment"
+            ],
+
+            values=
+                "Customers",
+
+            color=
+                "Customers",
+
+            color_continuous_scale=
+                "Viridis",
+
+            title=
+                "Customer Segment Size"
+        )
+
+        figure.update_layout(
+            height=450
+        )
+
+        return figure
+
+
+    # =========================================================
+    # STYLED CUSTOMER TABLE
+    # =========================================================
+
+    def _styled_customer_table(
+        self,
+        table: pd.DataFrame
+    ):
+
+        if table.empty:
+
+            st.info(
+                "No customers available "
+                "for this segment."
+            )
+
+            return
+
+        display = table.copy()
+
+        if "Churn Risk" in display.columns:
+
+            display["Churn Risk"] = (
+                display["Churn Risk"]
+                .apply(
+                    format_risk_badge
+                )
+            )
+
+        if "CLV Value Band" in display.columns:
+
+            display["CLV Value Band"] = (
+                display["CLV Value Band"]
+                .apply(
+                    format_clv_badge
+                )
+            )
+
+        if "Churn Probability" in display.columns:
+
+            display["Churn Probability"] = (
+                pd.to_numeric(
+                    display[
+                        "Churn Probability"
+                    ],
+                    errors="coerce"
+                )
+                *
+                100
+            ).round(
+                1
+            )
+
+            display["Churn Probability"] = (
+                display[
+                    "Churn Probability"
+                ]
+                .astype(str)
+                +
+                "%"
+            )
+
+        st.dataframe(
+            display,
+            use_container_width=True,
+            hide_index=True,
+            height=500
+        )
+
+
     # =========================================================
     # RENDER
     # =========================================================
@@ -1016,456 +1230,513 @@ class SegmentationIntelligence:
         df: pd.DataFrame
     ):
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        st.title(
-            "Customer Segmentation Intelligence"
+        metrics = self.calculate_metrics(
+            data
+        )
+
+        st.markdown(
+            "## 🧩 Customer Segmentation Intelligence"
         )
 
         st.caption(
-            "Analyse customer behavioural groups, "
-            "segment value, churn exposure and "
-            "segment-level business opportunities."
+            "Interactive analysis of customer groups, "
+            "behavioral patterns, predicted revenue, "
+            "customer value and churn exposure."
         )
 
-        # =====================================================
-        # KPIs
-        # =====================================================
-
-        metrics = (
-            self.calculate_metrics(
-                data
-            )
+        self._render_kpis(
+            metrics
         )
 
-        col1, col2, col3, col4 = (
-            st.columns(
-                4
-            )
-        )
-
-        with col1:
-
-            st.metric(
-                "Customers",
-                f"{metrics['total_customers']:,}"
-            )
-
-        with col2:
-
-            st.metric(
-                "Customer Segments",
-                f"{metrics['segment_count']}"
-            )
-
-        with col3:
-
-            st.metric(
-                "Largest Segment",
-                metrics[
-                    "largest_segment"
-                ],
-                (
-                    f"{metrics['largest_segment_customers']} customers"
-                )
-            )
-
-        with col4:
-
-            st.metric(
-                "Highest Revenue Segment",
-                metrics[
-                    "highest_revenue_segment"
-                ],
-                (
-                    f"{metrics['highest_revenue_value']:,.2f}"
-                )
-            )
-
+        st.write("")
         st.divider()
 
-        # =====================================================
-        # SEGMENT DISTRIBUTION
-        # =====================================================
-
-        left, right = (
-            st.columns(
-                2
-            )
-        )
-
-        distribution = (
-            self.segment_distribution(
-                data
-            )
-        )
-
-        with left:
-
-            st.subheader(
-                "Segment Distribution"
-            )
-
-            distribution_chart = (
-                px.bar(
-                    distribution,
-                    x=
-                        "Customer Segment",
-                    y=
-                        "Customers",
-                    text=
-                        "Customers",
-                    title=
-                        "Customers by Segment"
-                )
-            )
-
-            st.plotly_chart(
-                distribution_chart,
-                use_container_width=True
-            )
-
-        with right:
-
-            st.subheader(
-                "Segment Share"
-            )
-
-            pie_chart = (
-                px.pie(
-                    distribution,
-                    names=
-                        "Customer Segment",
-                    values=
-                        "Customers",
-                    title=
-                        "Customer Distribution Across Segments"
-                )
-            )
-
-            st.plotly_chart(
-                pie_chart,
-                use_container_width=True
-            )
-
-        st.divider()
-
-        # =====================================================
-        # BEHAVIOURAL PROFILE
-        # =====================================================
-
-        st.subheader(
-            "Segment Behavioural Profile"
-        )
-
-        profile = (
-            self.segment_profile(
-                data
-            )
-        )
-
-        if profile.empty:
-
-            st.info(
-                "Behavioural features are not available."
-            )
-
-        else:
-
-            st.dataframe(
-                profile,
-                use_container_width=True,
-                hide_index=True
-            )
-
-            available_features = [
-                column
-                for column in [
-                    "Recency",
-                    "Frequency",
-                    "Monetary",
-                    "TotalItems",
-                    "AverageOrderValue",
-                    "Tenure"
+        tab1, tab2, tab3, tab4 = (
+            st.tabs(
+                [
+                    "📊 Segment Overview",
+                    "🧠 Behavioral Profiles",
+                    "💰 Value & Risk",
+                    "🎯 Segment Strategy"
                 ]
-                if column in profile.columns
-            ]
-
-            if available_features:
-
-                selected_feature = (
-                    st.selectbox(
-                        "Select behavioural metric",
-                        options=
-                            available_features,
-                        key=
-                            "segment_behavior_metric"
-                    )
-                )
-
-                feature_chart = (
-                    px.bar(
-                        profile,
-                        x=
-                            "Customer Segment",
-                        y=
-                            selected_feature,
-                        text=
-                            selected_feature,
-                        title=
-                            (
-                                f"Average {selected_feature} "
-                                f"by Segment"
-                            )
-                    )
-                )
-
-                st.plotly_chart(
-                    feature_chart,
-                    use_container_width=True
-                )
-
-        st.divider()
-
-        # =====================================================
-        # REVENUE CONTRIBUTION
-        # =====================================================
-
-        st.subheader(
-            "Segment Revenue Contribution"
-        )
-
-        revenue = (
-            self.revenue_contribution(
-                data
             )
         )
 
-        if revenue.empty:
+        # =====================================================
+        # TAB 1 — OVERVIEW
+        # =====================================================
 
-            st.info(
-                "Predicted revenue data is not available."
+        with tab1:
+
+            distribution = (
+                self.segment_distribution(
+                    data
+                )
             )
 
-        else:
-
-            col1, col2 = (
-                st.columns(
-                    2
-                )
+            col1, col2 = st.columns(
+                2
             )
 
             with col1:
 
-                revenue_chart = (
-                    px.bar(
-                        revenue,
-                        x=
-                            "Customer Segment",
-                        y=
-                            "Total Predicted Revenue",
-                        text=
-                            "Total Predicted Revenue",
-                        title=
-                            "Predicted 90-Day Revenue by Segment"
-                    )
+                bar = px.bar(
+                    distribution,
+
+                    x=
+                        "Customer Segment",
+
+                    y=
+                        "Customers",
+
+                    color=
+                        "Customer Segment",
+
+                    text=
+                        "Customers",
+
+                    title=
+                        "Customers by Segment"
+                )
+
+                bar.update_layout(
+                    showlegend=False
                 )
 
                 st.plotly_chart(
-                    revenue_chart,
+                    bar,
                     use_container_width=True
                 )
 
             with col2:
 
-                revenue_share = (
-                    px.pie(
-                        revenue,
-                        names=
-                            "Customer Segment",
-                        values=
-                            "Total Predicted Revenue",
-                        title=
-                            "Revenue Contribution Share"
-                    )
+                donut = px.pie(
+                    distribution,
+
+                    names=
+                        "Customer Segment",
+
+                    values=
+                        "Customers",
+
+                    hole=
+                        0.55,
+
+                    title=
+                        "Segment Share"
+                )
+
+                donut.update_traces(
+                    textinfo=
+                        "percent+label"
                 )
 
                 st.plotly_chart(
-                    revenue_share,
+                    donut,
+                    use_container_width=True
+                )
+
+            treemap = self._segment_treemap(
+                data
+            )
+
+            if treemap is not None:
+
+                st.plotly_chart(
+                    treemap,
                     use_container_width=True
                 )
 
             st.dataframe(
-                revenue,
+                distribution,
                 use_container_width=True,
                 hide_index=True
             )
 
-        st.divider()
 
         # =====================================================
-        # CHURN EXPOSURE
+        # TAB 2 — BEHAVIOR
         # =====================================================
 
-        st.subheader(
-            "Churn Exposure by Segment"
-        )
+        with tab2:
 
-        churn_data = (
-            self.churn_exposure(
+            st.markdown(
+                "### 🧠 Segment Behavioral Profile"
+            )
+
+            radar = self._segment_radar(
                 data
             )
-        )
 
-        if churn_data.empty:
+            if radar is not None:
 
-            st.info(
-                "Churn Risk data is not available."
+                st.plotly_chart(
+                    radar,
+                    use_container_width=True
+                )
+
+            profile = self.segment_profile(
+                data
             )
 
-        else:
+            if profile.empty:
 
-            churn_chart = (
-                px.bar(
-                    churn_data,
+                st.info(
+                    "Behavioral profile data "
+                    "is not available."
+                )
+
+            else:
+
+                st.dataframe(
+                    profile,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                metric_options = [
+                    column
+                    for column in [
+                        "Recency",
+                        "Frequency",
+                        "Monetary",
+                        "TotalItems",
+                        "AverageOrderValue",
+                        "Tenure"
+                    ]
+                    if column in profile.columns
+                ]
+
+                selected_metric = (
+                    st.selectbox(
+                        "Select behavior metric",
+
+                        options=
+                            metric_options,
+
+                        key=
+                            "premium_segment_metric"
+                    )
+                )
+
+                chart = px.bar(
+                    profile,
+
                     x=
                         "Customer Segment",
+
+                    y=
+                        selected_metric,
+
+                    color=
+                        selected_metric,
+
+                    text=
+                        selected_metric,
+
+                    color_continuous_scale=
+                        "Blues",
+
+                    title=
+                        (
+                            f"Average {selected_metric} "
+                            f"by Segment"
+                        )
+                )
+
+                chart.update_layout(
+                    coloraxis_showscale=False
+                )
+
+                st.plotly_chart(
+                    chart,
+                    use_container_width=True
+                )
+
+            st.info(
+                "Radar values are normalized within the "
+                "current customer population. Recency is "
+                "reversed so higher values represent more "
+                "recent customer engagement."
+            )
+
+
+        # =====================================================
+        # TAB 3 — VALUE & RISK
+        # =====================================================
+
+        with tab3:
+
+            revenue = self.revenue_contribution(
+                data
+            )
+
+            if not revenue.empty:
+
+                col1, col2 = st.columns(
+                    2
+                )
+
+                with col1:
+
+                    chart = px.bar(
+                        revenue,
+
+                        x=
+                            "Customer Segment",
+
+                        y=
+                            "Total Predicted Revenue",
+
+                        color=
+                            "Total Predicted Revenue",
+
+                        text=
+                            "Total Predicted Revenue",
+
+                        color_continuous_scale=
+                            "Viridis",
+
+                        title=
+                            "Predicted Revenue by Segment"
+                    )
+
+                    chart.update_layout(
+                        coloraxis_showscale=False
+                    )
+
+                    st.plotly_chart(
+                        chart,
+                        use_container_width=True
+                    )
+
+                with col2:
+
+                    pie = px.pie(
+                        revenue,
+
+                        names=
+                            "Customer Segment",
+
+                        values=
+                            "Total Predicted Revenue",
+
+                        hole=
+                            0.55,
+
+                        title=
+                            "Revenue Contribution Share"
+                    )
+
+                    st.plotly_chart(
+                        pie,
+                        use_container_width=True
+                    )
+
+            st.markdown(
+                "### ⚠️ Churn Exposure"
+            )
+
+            churn_data = self.churn_exposure(
+                data
+            )
+
+            if churn_data.empty:
+
+                st.info(
+                    "Churn Risk data "
+                    "is not available."
+                )
+
+            else:
+
+                churn_chart = px.bar(
+                    churn_data,
+
+                    x=
+                        "Customer Segment",
+
                     y=
                         "Customers",
+
                     color=
                         "Churn Risk",
+
                     barmode=
-                        "group",
+                        "stack",
+
+                    color_discrete_map={
+                        "High":
+                            "#ef4444",
+
+                        "Medium":
+                            "#f59e0b",
+
+                        "Low":
+                            "#10b981"
+                    },
+
                     title=
                         "Churn Risk Composition by Segment"
                 )
+
+                st.plotly_chart(
+                    churn_chart,
+                    use_container_width=True
+                )
+
+            st.markdown(
+                "### 💎 CLV Composition"
             )
 
-            st.plotly_chart(
-                churn_chart,
-                use_container_width=True
-            )
-
-        st.divider()
-
-        # =====================================================
-        # CLV COMPOSITION
-        # =====================================================
-
-        st.subheader(
-            "CLV Composition by Segment"
-        )
-
-        clv_data = (
-            self.clv_composition(
+            clv_data = self.clv_composition(
                 data
             )
-        )
 
-        if clv_data.empty:
+            if clv_data.empty:
 
-            st.info(
-                "CLV Value Band data is not available."
-            )
+                st.info(
+                    "CLV Value Band data "
+                    "is not available."
+                )
 
-        else:
+            else:
 
-            clv_chart = (
-                px.bar(
+                clv_chart = px.bar(
                     clv_data,
+
                     x=
                         "Customer Segment",
+
                     y=
                         "Customers",
+
                     color=
                         "CLV Value Band",
+
                     barmode=
-                        "group",
+                        "stack",
+
+                    color_discrete_map={
+                        "High":
+                            "#7c3aed",
+
+                        "Medium":
+                            "#2563eb",
+
+                        "Low":
+                            "#94a3b8"
+                    },
+
                     title=
                         "Customer Value Composition by Segment"
                 )
+
+                st.plotly_chart(
+                    clv_chart,
+                    use_container_width=True
+                )
+
+            performance = (
+                self.segment_business_performance(
+                    data
+                )
             )
 
-            st.plotly_chart(
-                clv_chart,
-                use_container_width=True
+            st.markdown(
+                "### 📋 Segment Business Performance"
             )
-
-        st.divider()
-
-        # =====================================================
-        # BUSINESS PERFORMANCE
-        # =====================================================
-
-        st.subheader(
-            "Segment Business Performance"
-        )
-
-        performance = (
-            self.segment_business_performance(
-                data
-            )
-        )
-
-        st.dataframe(
-            performance,
-            use_container_width=True,
-            hide_index=True
-        )
-
-        st.divider()
-
-        # =====================================================
-        # SEGMENT STRATEGIES
-        # =====================================================
-
-        st.subheader(
-            "Recommended Segment Strategies"
-        )
-
-        strategies = (
-            self.segment_actions(
-                data
-            )
-        )
-
-        if strategies.empty:
-
-            st.info(
-                "Segment strategy data is unavailable."
-            )
-
-        else:
 
             st.dataframe(
-                strategies,
+                performance,
                 use_container_width=True,
                 hide_index=True
             )
 
-        st.caption(
-            "Recommended segment strategies are "
-            "rule-based decision-support suggestions "
-            "derived from the segment's current churn "
-            "and value profile. They are not ML predictions."
-        )
-
-        st.divider()
 
         # =====================================================
-        # SEGMENT EXPLORER
+        # TAB 4 — STRATEGY
         # =====================================================
 
-        st.subheader(
-            "Segment Customer Explorer"
-        )
+        with tab4:
 
-        segment_options = (
-            sorted(
+            strategies = (
+                self.segment_actions(
+                    data
+                )
+            )
+
+            st.markdown(
+                "### 🎯 Recommended Segment Strategies"
+            )
+
+            if strategies.empty:
+
+                st.info(
+                    "Segment strategy data "
+                    "is unavailable."
+                )
+
+            else:
+
+                strategy_types = (
+                    strategies[
+                        "Strategy"
+                    ]
+                    .value_counts()
+                    .rename_axis(
+                        "Strategy"
+                    )
+                    .reset_index(
+                        name="Segments"
+                    )
+                )
+
+                strategy_chart = px.pie(
+                    strategy_types,
+
+                    names=
+                        "Strategy",
+
+                    values=
+                        "Segments",
+
+                    hole=
+                        0.55,
+
+                    title=
+                        "Segment Strategy Mix"
+                )
+
+                st.plotly_chart(
+                    strategy_chart,
+                    use_container_width=True
+                )
+
+                st.dataframe(
+                    strategies,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+            st.warning(
+                "Segment strategies are rule-based "
+                "business suggestions derived from "
+                "segment churn and value profiles. "
+                "They are not ML predictions."
+            )
+
+            st.divider()
+
+            st.markdown(
+                "### 👥 Segment Customer Explorer"
+            )
+
+            segment_options = sorted(
                 data[
                     "Customer Segment"
                 ]
@@ -1473,30 +1744,31 @@ class SegmentationIntelligence:
                 .unique()
                 .tolist()
             )
-        )
 
-        selected_segment = (
-            st.selectbox(
-                "Select Customer Segment",
-                options=
-                    segment_options,
-                key=
-                    "segment_customer_explorer"
+            selected_segment = (
+                st.selectbox(
+                    "Select Customer Segment",
+
+                    options=
+                        segment_options,
+
+                    key=
+                        "premium_segment_explorer"
+                )
             )
-        )
 
-        segment_customer_table = (
-            self.segment_customers(
-                data,
-                segment=
-                    selected_segment,
-                top_n=
-                    100
+            segment_table = (
+                self.segment_customers(
+                    data,
+
+                    segment=
+                        selected_segment,
+
+                    top_n=
+                        100
+                )
             )
-        )
 
-        st.dataframe(
-            segment_customer_table,
-            use_container_width=True,
-            hide_index=True
-        )
+            self._styled_customer_table(
+                segment_table
+            )

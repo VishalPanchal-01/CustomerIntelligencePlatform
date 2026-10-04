@@ -37,6 +37,7 @@ from dashboard.data_loader import (
 )
 
 from dashboard.ui import (
+    configure_plotly_theme,
     apply_dashboard_style,
     render_dashboard_header,
     render_footer,
@@ -70,6 +71,10 @@ from dashboard.customer_explorer import (
     CustomerExplorer
 )
 
+from dashboard.explainability_intelligence import (
+    ExplainabilityIntelligence
+)
+
 
 # ============================================================
 # PAGE CONFIG
@@ -80,7 +85,7 @@ st.set_page_config(
         "AI Customer Intelligence Platform",
 
     page_icon=
-        "📊",
+        "🚀",
 
     layout=
         "wide",
@@ -91,8 +96,10 @@ st.set_page_config(
 
 
 # ============================================================
-# STYLE
+# GLOBAL THEME
 # ============================================================
+
+configure_plotly_theme()
 
 apply_dashboard_style()
 
@@ -165,25 +172,30 @@ render_dashboard_header()
 # ============================================================
 
 st.sidebar.title(
-    "Navigation"
+    "🚀 Customer Intelligence"
+)
+
+st.sidebar.caption(
+    "AI-powered customer analytics"
 )
 
 
 # ============================================================
-# PAGE NAVIGATION
+# NAVIGATION
 # ============================================================
 
 page = (
     st.sidebar.radio(
-        "Dashboard",
+        "Navigation",
 
         options=[
-            "Executive Overview",
-            "Customer Explorer",
-            "Churn Intelligence",
-            "Customer Segmentation",
-            "CLV Intelligence",
-            "Recommendation Intelligence"
+            "🏠 Executive Overview",
+            "👤 Customer Explorer",
+            "⚠️ Churn Intelligence",
+            "🧩 Customer Segmentation",
+            "💰 CLV Intelligence",
+            "🎯 Recommendation Intelligence",
+            "🧠 Explainability Intelligence"
         ]
     )
 )
@@ -196,12 +208,12 @@ page = (
 st.sidebar.divider()
 
 st.sidebar.subheader(
-    "Global Filters"
+    "🔎 Global Filters"
 )
 
 
 # ------------------------------------------------------------
-# SEGMENT
+# CUSTOMER SEGMENT
 # ------------------------------------------------------------
 
 segment_options = (
@@ -273,21 +285,21 @@ selected_clv_bands = (
 
 
 # ------------------------------------------------------------
-# CUSTOMER ID
+# CUSTOMER SEARCH
 # ------------------------------------------------------------
 
 customer_search = (
     st.sidebar.text_input(
-        "Search Customer ID",
+        "Customer ID",
 
         placeholder=
-            "Enter Customer ID"
+            "Search Customer ID"
     )
 )
 
 
 # ============================================================
-# APPLY FILTERS
+# FILTER DATA
 # ============================================================
 
 filtered_df = (
@@ -311,7 +323,7 @@ filtered_df = (
 
 
 # ============================================================
-# FILTER STATUS
+# FILTER SUMMARY
 # ============================================================
 
 render_filter_summary(
@@ -337,7 +349,7 @@ render_data_status(
 
 
 # ============================================================
-# GLOBAL EXPORT
+# EXPORT
 # ============================================================
 
 render_global_download(
@@ -356,8 +368,8 @@ if filtered_df.empty:
     )
 
     st.info(
-        "Adjust the Customer Segment, Churn Risk, "
-        "CLV Value Band or Customer ID filters."
+        "Adjust Customer Segment, Churn Risk, "
+        "CLV Value Band or Customer ID."
     )
 
     render_footer()
@@ -375,7 +387,7 @@ try:
     # EXECUTIVE OVERVIEW
     # --------------------------------------------------------
 
-    if page == "Executive Overview":
+    if page == "🏠 Executive Overview":
 
         dashboard = (
             ExecutiveOverview()
@@ -389,7 +401,7 @@ try:
     # CUSTOMER EXPLORER
     # --------------------------------------------------------
 
-    elif page == "Customer Explorer":
+    elif page == "👤 Customer Explorer":
 
         dashboard = (
             CustomerExplorer()
@@ -403,7 +415,7 @@ try:
     # CHURN
     # --------------------------------------------------------
 
-    elif page == "Churn Intelligence":
+    elif page == "⚠️ Churn Intelligence":
 
         dashboard = (
             ChurnIntelligence()
@@ -417,7 +429,7 @@ try:
     # SEGMENTATION
     # --------------------------------------------------------
 
-    elif page == "Customer Segmentation":
+    elif page == "🧩 Customer Segmentation":
 
         dashboard = (
             SegmentationIntelligence()
@@ -431,7 +443,7 @@ try:
     # CLV
     # --------------------------------------------------------
 
-    elif page == "CLV Intelligence":
+    elif page == "💰 CLV Intelligence":
 
         dashboard = (
             CLVIntelligence()
@@ -445,7 +457,7 @@ try:
     # RECOMMENDATION
     # --------------------------------------------------------
 
-    elif page == "Recommendation Intelligence":
+    elif page == "🎯 Recommendation Intelligence":
 
         dashboard = (
             RecommendationIntelligence()
@@ -455,12 +467,30 @@ try:
             filtered_df
         )
 
+    # --------------------------------------------------------
+    # EXPLAINABILITY
+    # --------------------------------------------------------
+
+    elif page == "🧠 Explainability Intelligence":
+
+        dashboard = (
+            ExplainabilityIntelligence(
+                project_root=
+                    PROJECT_ROOT
+            )
+        )
+
+        dashboard.render(
+            filtered_df
+        )
+
+
 except Exception as error:
 
     render_data_error(
         (
-            f"An error occurred while rendering "
-            f"{page}."
+            f"An error occurred while "
+            f"rendering {page}."
         ),
         error
     )

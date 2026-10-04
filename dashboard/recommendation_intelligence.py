@@ -1,6 +1,13 @@
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
+
+from dashboard.ui import (
+    render_color_card,
+    format_risk_badge,
+    format_clv_badge
+)
 
 
 CUSTOMER_ID = "Customer ID"
@@ -25,10 +32,6 @@ class RecommendationIntelligence:
                 "Customer ID column not found."
             )
 
-        # -----------------------------------------------------
-        # Recommendation score
-        # -----------------------------------------------------
-
         if (
             "Top Recommendation Score"
             in data.columns
@@ -43,37 +46,124 @@ class RecommendationIntelligence:
                 errors="coerce"
             )
 
-        # -----------------------------------------------------
-        # Recommendation text fields
-        # -----------------------------------------------------
-
-        text_columns = [
-            "Top Recommended Stock Code",
-            "Top Recommended Product",
-            "Recommendation Source",
-            "Recommended Stock Codes",
-            "Recommended Products"
-        ]
-
-        for column in text_columns:
-
-            if column in data.columns:
-
-                data[
-                    column
-                ] = data[
-                    column
-                ].where(
-                    data[
-                        column
-                    ].notna(),
-                    None
-                )
-
         return data
 
+
     # =========================================================
-    # CALCULATE METRICS
+    # SPLIT RECOMMENDATION LIST
+    # =========================================================
+
+    def _split_recommendation_list(
+        self,
+        value
+    ) -> list:
+
+        if pd.isna(
+            value
+        ):
+
+            return []
+
+        return [
+            item.strip()
+            for item
+            in str(
+                value
+            ).split(
+                "|"
+            )
+            if item.strip()
+        ]
+
+
+    # =========================================================
+    # UNIQUE RECOMMENDED PRODUCTS
+    # =========================================================
+
+    def _count_unique_recommended_products(
+        self,
+        df: pd.DataFrame
+    ) -> int:
+
+        if (
+            "Recommended Products"
+            not in df.columns
+        ):
+
+            return 0
+
+        products = set()
+
+        for value in (
+            df[
+                "Recommended Products"
+            ]
+            .dropna()
+            .tolist()
+        ):
+
+            products.update(
+                self._split_recommendation_list(
+                    value
+                )
+            )
+
+        return len(
+            products
+        )
+
+
+    # =========================================================
+    # AVERAGE RECOMMENDATIONS PER CUSTOMER
+    # =========================================================
+
+    def _average_recommendation_count(
+        self,
+        df: pd.DataFrame
+    ) -> float:
+
+        if (
+            "Recommended Products"
+            not in df.columns
+        ):
+
+            return 0.0
+
+        counts = []
+
+        for value in (
+            df[
+                "Recommended Products"
+            ]
+            .dropna()
+            .tolist()
+        ):
+
+            counts.append(
+                len(
+                    self._split_recommendation_list(
+                        value
+                    )
+                )
+            )
+
+        if not counts:
+
+            return 0.0
+
+        return float(
+            sum(
+                counts
+            )
+            /
+            len(
+                counts
+            )
+        )
+
+
+    # =========================================================
+    # METRICS
     # =========================================================
 
     def calculate_metrics(
@@ -81,10 +171,8 @@ class RecommendationIntelligence:
         df: pd.DataFrame
     ) -> dict:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         total_customers = int(
@@ -93,10 +181,6 @@ class RecommendationIntelligence:
             ]
             .nunique()
         )
-
-        # -----------------------------------------------------
-        # Customers with recommendations
-        # -----------------------------------------------------
 
         if (
             "Top Recommended Product"
@@ -127,9 +211,11 @@ class RecommendationIntelligence:
             customers_with_recommendations = 0
             unique_top_products = 0
 
-        # -----------------------------------------------------
-        # Coverage
-        # -----------------------------------------------------
+        customers_without_recommendations = (
+            total_customers
+            -
+            customers_with_recommendations
+        )
 
         if total_customers > 0:
 
@@ -145,52 +231,31 @@ class RecommendationIntelligence:
 
             recommendation_coverage = 0.0
 
-        customers_without_recommendations = (
-            total_customers
-            -
-            customers_with_recommendations
-        )
-
-        # -----------------------------------------------------
-        # Average recommendation score
-        # -----------------------------------------------------
-
         if (
             "Top Recommendation Score"
             in data.columns
         ):
 
-            average_score = float(
+            score_series = (
                 data[
                     "Top Recommendation Score"
                 ]
                 .dropna()
-                .mean()
             )
+
+            if score_series.empty:
+
+                average_score = 0.0
+
+            else:
+
+                average_score = float(
+                    score_series.mean()
+                )
 
         else:
 
             average_score = 0.0
-
-        # -----------------------------------------------------
-        # Unique products across complete Top-N lists
-        # -----------------------------------------------------
-
-        unique_recommended_products = (
-            self._count_unique_recommended_products(
-                data
-            )
-        )
-
-        # -----------------------------------------------------
-        # Average Top-N list size
-        # -----------------------------------------------------
-
-        average_recommendations_per_customer = (
-            self._average_recommendation_count(
-                data
-            )
-        )
 
         return {
 
@@ -212,134 +277,19 @@ class RecommendationIntelligence:
                 unique_top_products,
 
             "unique_recommended_products":
-                unique_recommended_products,
+                self._count_unique_recommended_products(
+                    data
+                ),
 
             "average_top_recommendation_score":
                 average_score,
 
             "average_recommendations_per_customer":
-                average_recommendations_per_customer
+                self._average_recommendation_count(
+                    data
+                )
         }
 
-    # =========================================================
-    # UNIQUE PRODUCTS IN COMPLETE LISTS
-    # =========================================================
-
-    def _count_unique_recommended_products(
-        self,
-        df: pd.DataFrame
-    ) -> int:
-
-        if (
-            "Recommended Products"
-            not in df.columns
-        ):
-
-            return 0
-
-        products = set()
-
-        for value in (
-            df[
-                "Recommended Products"
-            ]
-            .dropna()
-            .tolist()
-        ):
-
-            parsed = (
-                self._split_recommendation_list(
-                    value
-                )
-            )
-
-            products.update(
-                parsed
-            )
-
-        return len(
-            products
-        )
-
-    # =========================================================
-    # AVERAGE NUMBER OF RECOMMENDATIONS
-    # =========================================================
-
-    def _average_recommendation_count(
-        self,
-        df: pd.DataFrame
-    ) -> float:
-
-        if (
-            "Recommended Products"
-            not in df.columns
-        ):
-
-            return 0.0
-
-        counts = []
-
-        for value in (
-            df[
-                "Recommended Products"
-            ]
-            .dropna()
-            .tolist()
-        ):
-
-            products = (
-                self._split_recommendation_list(
-                    value
-                )
-            )
-
-            counts.append(
-                len(
-                    products
-                )
-            )
-
-        if not counts:
-
-            return 0.0
-
-        return float(
-            sum(
-                counts
-            )
-            /
-            len(
-                counts
-            )
-        )
-
-    # =========================================================
-    # SPLIT PRODUCT LIST
-    # =========================================================
-
-    def _split_recommendation_list(
-        self,
-        value
-    ) -> list:
-
-        if pd.isna(
-            value
-        ):
-
-            return []
-
-        products = [
-            item.strip()
-            for item
-            in str(
-                value
-            ).split(
-                "|"
-            )
-            if item.strip()
-        ]
-
-        return products
 
     # =========================================================
     # TOP PRODUCT DISTRIBUTION
@@ -351,10 +301,8 @@ class RecommendationIntelligence:
         top_n: int = 20
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         if (
@@ -362,14 +310,9 @@ class RecommendationIntelligence:
             not in data.columns
         ):
 
-            return pd.DataFrame(
-                columns=[
-                    "Product",
-                    "Recommendations"
-                ]
-            )
+            return pd.DataFrame()
 
-        result = (
+        return (
             data[
                 "Top Recommended Product"
             ]
@@ -386,10 +329,9 @@ class RecommendationIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
-    # ALL RECOMMENDED PRODUCT FREQUENCY
+    # ALL PRODUCT DISTRIBUTION
     # =========================================================
 
     def all_product_distribution(
@@ -398,10 +340,8 @@ class RecommendationIntelligence:
         top_n: int = 20
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         if (
@@ -409,12 +349,7 @@ class RecommendationIntelligence:
             not in data.columns
         ):
 
-            return pd.DataFrame(
-                columns=[
-                    "Product",
-                    "Recommendation Count"
-                ]
-            )
+            return pd.DataFrame()
 
         products = []
 
@@ -434,14 +369,9 @@ class RecommendationIntelligence:
 
         if not products:
 
-            return pd.DataFrame(
-                columns=[
-                    "Product",
-                    "Recommendation Count"
-                ]
-            )
+            return pd.DataFrame()
 
-        result = (
+        return (
             pd.Series(
                 products
             )
@@ -457,10 +387,9 @@ class RecommendationIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
-    # RECOMMENDATION SOURCE DISTRIBUTION
+    # SOURCE DISTRIBUTION
     # =========================================================
 
     def source_distribution(
@@ -468,10 +397,8 @@ class RecommendationIntelligence:
         df: pd.DataFrame
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         if (
@@ -479,14 +406,9 @@ class RecommendationIntelligence:
             not in data.columns
         ):
 
-            return pd.DataFrame(
-                columns=[
-                    "Recommendation Source",
-                    "Customers"
-                ]
-            )
+            return pd.DataFrame()
 
-        result = (
+        return (
             data[
                 "Recommendation Source"
             ]
@@ -500,10 +422,9 @@ class RecommendationIntelligence:
             )
         )
 
-        return result
 
     # =========================================================
-    # TOP PRODUCT BY CUSTOMER SEGMENT
+    # PRODUCTS BY SEGMENT
     # =========================================================
 
     def products_by_segment(
@@ -512,10 +433,8 @@ class RecommendationIntelligence:
         top_n_per_segment: int = 5
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         required = [
@@ -533,10 +452,7 @@ class RecommendationIntelligence:
         valid = (
             data
             .dropna(
-                subset=[
-                    "Customer Segment",
-                    "Top Recommended Product"
-                ]
+                subset=required
             )
             .copy()
         )
@@ -604,8 +520,9 @@ class RecommendationIntelligence:
 
         return result
 
+
     # =========================================================
-    # TOP PRODUCTS BY CLV BAND
+    # PRODUCTS BY CLV BAND
     # =========================================================
 
     def products_by_clv_band(
@@ -614,10 +531,8 @@ class RecommendationIntelligence:
         top_n_per_band: int = 5
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         required = [
@@ -635,10 +550,7 @@ class RecommendationIntelligence:
         valid = (
             data
             .dropna(
-                subset=[
-                    "CLV Value Band",
-                    "Top Recommended Product"
-                ]
+                subset=required
             )
             .copy()
         )
@@ -706,8 +618,9 @@ class RecommendationIntelligence:
 
         return result
 
+
     # =========================================================
-    # TOP PRODUCTS BY CHURN RISK
+    # PRODUCTS BY CHURN RISK
     # =========================================================
 
     def products_by_churn_risk(
@@ -716,10 +629,8 @@ class RecommendationIntelligence:
         top_n_per_risk: int = 5
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         required = [
@@ -737,10 +648,7 @@ class RecommendationIntelligence:
         valid = (
             data
             .dropna(
-                subset=[
-                    "Churn Risk",
-                    "Top Recommended Product"
-                ]
+                subset=required
             )
             .copy()
         )
@@ -808,8 +716,9 @@ class RecommendationIntelligence:
 
         return result
 
+
     # =========================================================
-    # CUSTOMER RECOMMENDATION DETAILS
+    # CUSTOMER RECOMMENDATIONS
     # =========================================================
 
     def customer_recommendations(
@@ -818,10 +727,8 @@ class RecommendationIntelligence:
         customer_id
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         customer = (
@@ -836,17 +743,9 @@ class RecommendationIntelligence:
 
         if customer.empty:
 
-            return pd.DataFrame(
-                columns=[
-                    "Rank",
-                    "Product"
-                ]
-            )
+            return pd.DataFrame()
 
-        row = (
-            customer
-            .iloc[0]
-        )
+        row = customer.iloc[0]
 
         products = (
             self._split_recommendation_list(
@@ -865,23 +764,13 @@ class RecommendationIntelligence:
         )
 
         max_length = max(
-            len(
-                products
-            ),
-            len(
-                codes
-            )
+            len(products),
+            len(codes)
         )
 
         if max_length == 0:
 
-            return pd.DataFrame(
-                columns=[
-                    "Rank",
-                    "Stock Code",
-                    "Product"
-                ]
-            )
+            return pd.DataFrame()
 
         rows = []
 
@@ -889,46 +778,31 @@ class RecommendationIntelligence:
             max_length
         ):
 
-            product = (
-                products[
-                    index
-                ]
-                if index
-                <
-                len(
-                    products
-                )
-                else ""
-            )
-
-            stock_code = (
-                codes[
-                    index
-                ]
-                if index
-                <
-                len(
-                    codes
-                )
-                else ""
-            )
-
             rows.append(
                 {
                     "Rank":
                         index + 1,
 
                     "Stock Code":
-                        stock_code,
+                        (
+                            codes[index]
+                            if index < len(codes)
+                            else ""
+                        ),
 
                     "Product":
-                        product
+                        (
+                            products[index]
+                            if index < len(products)
+                            else ""
+                        )
                 }
             )
 
         return pd.DataFrame(
             rows
         )
+
 
     # =========================================================
     # CUSTOMER SUMMARY
@@ -940,13 +814,11 @@ class RecommendationIntelligence:
         customer_id
     ):
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        customer = (
+        result = (
             data[
                 data[
                     CUSTOMER_ID
@@ -956,14 +828,491 @@ class RecommendationIntelligence:
             ]
         )
 
-        if customer.empty:
+        if result.empty:
 
             return None
 
-        return (
-            customer
-            .iloc[0]
+        return result.iloc[0]
+
+
+    # =========================================================
+    # KPI CARDS
+    # =========================================================
+
+    def _render_kpis(
+        self,
+        metrics: dict
+    ):
+
+        row1 = st.columns(
+            4
         )
+
+        with row1[0]:
+
+            render_color_card(
+                title=
+                    "Recommendation Coverage",
+
+                value=
+                    (
+                        f"{metrics['recommendation_coverage']:.1f}%"
+                    ),
+
+                icon=
+                    "🎯",
+
+                card_class=
+                    "card-blue"
+            )
+
+        with row1[1]:
+
+            render_color_card(
+                title=
+                    "Customers Recommended",
+
+                value=
+                    (
+                        f"{metrics['customers_with_recommendations']:,}"
+                    ),
+
+                icon=
+                    "👥",
+
+                card_class=
+                    "card-green"
+            )
+
+        with row1[2]:
+
+            render_color_card(
+                title=
+                    "Unique Products",
+
+                value=
+                    (
+                        f"{metrics['unique_recommended_products']:,}"
+                    ),
+
+                icon=
+                    "🛍️",
+
+                card_class=
+                    "card-purple"
+            )
+
+        with row1[3]:
+
+            render_color_card(
+                title=
+                    "Avg Products / Customer",
+
+                value=
+                    (
+                        f"{metrics['average_recommendations_per_customer']:.1f}"
+                    ),
+
+                icon=
+                    "📦",
+
+                card_class=
+                    "card-blue"
+            )
+
+        st.write("")
+
+        row2 = st.columns(
+            3
+        )
+
+        with row2[0]:
+
+            render_color_card(
+                title=
+                    "Without Recommendations",
+
+                value=
+                    (
+                        f"{metrics['customers_without_recommendations']:,}"
+                    ),
+
+                icon=
+                    "⚠️",
+
+                card_class=
+                    "card-red"
+            )
+
+        with row2[1]:
+
+            render_color_card(
+                title=
+                    "Unique Rank-1 Products",
+
+                value=
+                    (
+                        f"{metrics['unique_top_products']:,}"
+                    ),
+
+                icon=
+                    "🏆",
+
+                card_class=
+                    "card-purple"
+            )
+
+        with row2[2]:
+
+            render_color_card(
+                title=
+                    "Avg Ranking Score",
+
+                value=
+                    (
+                        f"{metrics['average_top_recommendation_score']:.3f}"
+                    ),
+
+                icon=
+                    "📊",
+
+                card_class=
+                    "card-green"
+            )
+
+
+    # =========================================================
+    # COVERAGE GAUGE
+    # =========================================================
+
+    def _coverage_gauge(
+        self,
+        metrics: dict
+    ):
+
+        value = float(
+            metrics[
+                "recommendation_coverage"
+            ]
+        )
+
+        figure = go.Figure(
+            go.Indicator(
+                mode=
+                    "gauge+number",
+
+                value=
+                    value,
+
+                number={
+                    "suffix":
+                        "%"
+                },
+
+                title={
+                    "text":
+                        "Recommendation Coverage"
+                },
+
+                gauge={
+                    "axis": {
+                        "range": [
+                            0,
+                            100
+                        ]
+                    },
+
+                    "bar": {
+                        "color":
+                            "#4f46e5"
+                    },
+
+                    "steps": [
+                        {
+                            "range": [
+                                0,
+                                50
+                            ],
+                            "color":
+                                "#fee2e2"
+                        },
+
+                        {
+                            "range": [
+                                50,
+                                80
+                            ],
+                            "color":
+                                "#fef3c7"
+                        },
+
+                        {
+                            "range": [
+                                80,
+                                100
+                            ],
+                            "color":
+                                "#dcfce7"
+                        }
+                    ]
+                }
+            )
+        )
+
+        figure.update_layout(
+            height=330,
+            margin=dict(
+                l=20,
+                r=20,
+                t=60,
+                b=20
+            )
+        )
+
+        return figure
+
+
+    # =========================================================
+    # SOURCE DONUT
+    # =========================================================
+
+    def _source_donut(
+        self,
+        df: pd.DataFrame
+    ):
+
+        sources = self.source_distribution(
+            df
+        )
+
+        if sources.empty:
+
+            return None
+
+        figure = px.pie(
+            sources,
+
+            names=
+                "Recommendation Source",
+
+            values=
+                "Customers",
+
+            hole=
+                0.58,
+
+            title=
+                "Recommendation Source Mix"
+        )
+
+        figure.update_traces(
+            textinfo=
+                "percent+label"
+        )
+
+        figure.update_layout(
+            height=390,
+            legend_title_text=""
+        )
+
+        return figure
+
+
+    # =========================================================
+    # PRODUCT TREEMAP
+    # =========================================================
+
+    def _product_treemap(
+        self,
+        df: pd.DataFrame,
+        top_n: int = 25
+    ):
+
+        products = (
+            self.all_product_distribution(
+                df,
+                top_n=top_n
+            )
+        )
+
+        if products.empty:
+
+            return None
+
+        figure = px.treemap(
+            products,
+
+            path=[
+                "Product"
+            ],
+
+            values=
+                "Recommendation Count",
+
+            color=
+                "Recommendation Count",
+
+            color_continuous_scale=
+                "Viridis",
+
+            title=
+                "Top Recommended Product Landscape"
+        )
+
+        figure.update_layout(
+            height=500
+        )
+
+        return figure
+
+
+    # =========================================================
+    # PRODUCT CARDS
+    # =========================================================
+
+    def _render_recommendation_cards(
+        self,
+        recommendations: pd.DataFrame
+    ):
+
+        if recommendations.empty:
+
+            st.info(
+                "No Top-N recommendations "
+                "available for this customer."
+            )
+
+            return
+
+        columns = st.columns(
+            min(
+                len(recommendations),
+                5
+            )
+        )
+
+        for index, (
+            _,
+            row
+        ) in enumerate(
+            recommendations
+            .head(5)
+            .iterrows()
+        ):
+
+            with columns[index]:
+
+                rank = row.get(
+                    "Rank",
+                    index + 1
+                )
+
+                product = row.get(
+                    "Product",
+                    "Unknown Product"
+                )
+
+                stock_code = row.get(
+                    "Stock Code",
+                    ""
+                )
+
+                st.markdown(
+                    (
+                        '<div style="'
+                        'background:linear-gradient('
+                        '135deg,#4f46e5,#7c3aed);'
+                        'padding:18px;'
+                        'border-radius:16px;'
+                        'color:white;'
+                        'min-height:180px;'
+                        'box-shadow:0 10px 25px '
+                        'rgba(79,70,229,0.20);'
+                        '">'
+                        f'<div style="font-size:0.8rem;'
+                        f'opacity:0.8;">RANK #{rank}</div>'
+                        f'<div style="font-size:1rem;'
+                        f'font-weight:700;'
+                        f'margin-top:10px;">'
+                        f'{product}'
+                        f'</div>'
+                        f'<div style="font-size:0.8rem;'
+                        f'margin-top:14px;'
+                        f'opacity:0.85;">'
+                        f'Stock Code: {stock_code}'
+                        f'</div>'
+                        '</div>'
+                    ),
+                    unsafe_allow_html=True
+                )
+
+
+    # =========================================================
+    # STYLED SUMMARY TABLE
+    # =========================================================
+
+    def _styled_summary_table(
+        self,
+        df: pd.DataFrame
+    ):
+
+        desired_columns = [
+            CUSTOMER_ID,
+            "Customer Segment",
+            "Churn Risk",
+            "CLV Value Band",
+            "Top Recommended Product",
+            "Top Recommendation Score",
+            "Recommendation Source",
+            "Recommended Products"
+        ]
+
+        available_columns = [
+            column
+            for column in desired_columns
+            if column in df.columns
+        ]
+
+        table = (
+            df[
+                available_columns
+            ]
+            .copy()
+        )
+
+        if (
+            "Churn Risk"
+            in table.columns
+        ):
+
+            table[
+                "Churn Risk"
+            ] = table[
+                "Churn Risk"
+            ].apply(
+                format_risk_badge
+            )
+
+        if (
+            "CLV Value Band"
+            in table.columns
+        ):
+
+            table[
+                "CLV Value Band"
+            ] = table[
+                "CLV Value Band"
+            ].apply(
+                format_clv_badge
+            )
+
+        st.dataframe(
+            table,
+            use_container_width=True,
+            hide_index=True,
+            height=520
+        )
+
 
     # =========================================================
     # RENDER
@@ -974,113 +1323,95 @@ class RecommendationIntelligence:
         df: pd.DataFrame
     ):
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        st.title(
-            "Recommendation Intelligence"
+        metrics = self.calculate_metrics(
+            data
+        )
+
+        st.markdown(
+            "## 🎯 Recommendation Intelligence"
         )
 
         st.caption(
-            "Analyze personalized product recommendation "
-            "coverage, product patterns and customer-level "
-            "Top-N recommendations."
+            "Interactive analysis of personalized product "
+            "recommendations, coverage, product patterns, "
+            "customer value and recommendation strategy usage."
         )
 
         # =====================================================
-        # KPIs
+        # KPI CARDS
         # =====================================================
 
-        metrics = (
-            self.calculate_metrics(
-                data
-            )
+        self._render_kpis(
+            metrics
         )
 
-        col1, col2, col3, col4 = (
-            st.columns(
-                4
-            )
-        )
-
-        with col1:
-
-            st.metric(
-                "Recommendation Coverage",
-                (
-                    f"{metrics['recommendation_coverage']:.2f}%"
-                )
-            )
-
-        with col2:
-
-            st.metric(
-                "Customers With Recommendations",
-                f"{metrics['customers_with_recommendations']:,}"
-            )
-
-        with col3:
-
-            st.metric(
-                "Unique Recommended Products",
-                f"{metrics['unique_recommended_products']:,}"
-            )
-
-        with col4:
-
-            st.metric(
-                "Avg Recommendations / Customer",
-                (
-                    f"{metrics['average_recommendations_per_customer']:.2f}"
-                )
-            )
-
-        col5, col6, col7 = (
-            st.columns(
-                3
-            )
-        )
-
-        with col5:
-
-            st.metric(
-                "Total Customers",
-                f"{metrics['total_customers']:,}"
-            )
-
-        with col6:
-
-            st.metric(
-                "Customers Without Recommendations",
-                f"{metrics['customers_without_recommendations']:,}"
-            )
-
-        with col7:
-
-            st.metric(
-                "Unique Top Products",
-                f"{metrics['unique_top_products']:,}"
-            )
-
+        st.write("")
         st.divider()
 
         # =====================================================
-        # TOP PRODUCTS
+        # TABS
         # =====================================================
 
-        left, right = (
-            st.columns(
-                2
+        tab1, tab2, tab3, tab4 = (
+            st.tabs(
+                [
+                    "📊 Recommendation Overview",
+                    "🛍️ Product Intelligence",
+                    "🧩 Customer Groups",
+                    "👤 Customer Explorer"
+                ]
             )
         )
 
-        with left:
+        # =====================================================
+        # TAB 1 — OVERVIEW
+        # =====================================================
 
-            st.subheader(
-                "Most Common Top Recommendations"
+        with tab1:
+
+            col1, col2 = st.columns(
+                2
+            )
+
+            with col1:
+
+                gauge = self._coverage_gauge(
+                    metrics
+                )
+
+                st.plotly_chart(
+                    gauge,
+                    use_container_width=True
+                )
+
+            with col2:
+
+                source_donut = (
+                    self._source_donut(
+                        data
+                    )
+                )
+
+                if source_donut is None:
+
+                    st.info(
+                        "Recommendation source data "
+                        "is not available."
+                    )
+
+                else:
+
+                    st.plotly_chart(
+                        source_donut,
+                        use_container_width=True
+                    )
+
+            st.markdown(
+                "### 🏆 Most Common Rank-1 Recommendations"
             )
 
             top_products = (
@@ -1099,106 +1430,57 @@ class RecommendationIntelligence:
 
             else:
 
-                top_chart = (
-                    px.bar(
-                        top_products,
-                        x=
-                            "Recommendations",
-                        y=
-                            "Product",
-                        orientation=
-                            "h",
-                        text=
-                            "Recommendations",
-                        title=
-                            "Most Frequent Rank-1 Products"
-                    )
+                chart = px.bar(
+                    top_products,
+
+                    x=
+                        "Recommendations",
+
+                    y=
+                        "Product",
+
+                    orientation=
+                        "h",
+
+                    color=
+                        "Recommendations",
+
+                    text=
+                        "Recommendations",
+
+                    color_continuous_scale=
+                        "Viridis",
+
+                    title=
+                        "Most Frequent Rank-1 Products"
                 )
 
-                top_chart.update_layout(
+                chart.update_layout(
                     yaxis={
                         "categoryorder":
                             "total ascending"
-                    }
+                    },
+
+                    coloraxis_showscale=
+                        False,
+
+                    height=
+                        550
                 )
 
                 st.plotly_chart(
-                    top_chart,
+                    chart,
                     use_container_width=True
                 )
-
-        with right:
-
-            st.subheader(
-                "Most Recommended Products Across Top-N"
-            )
-
-            all_products = (
-                self.all_product_distribution(
-                    data,
-                    top_n=15
-                )
-            )
-
-            if all_products.empty:
-
-                st.info(
-                    "Complete Top-N recommendation "
-                    "lists are not available."
-                )
-
-            else:
-
-                all_chart = (
-                    px.bar(
-                        all_products,
-                        x=
-                            "Recommendation Count",
-                        y=
-                            "Product",
-                        orientation=
-                            "h",
-                        text=
-                            "Recommendation Count",
-                        title=
-                            "Most Frequent Products Across Top-N"
-                    )
-                )
-
-                all_chart.update_layout(
-                    yaxis={
-                        "categoryorder":
-                            "total ascending"
-                    }
-                )
-
-                st.plotly_chart(
-                    all_chart,
-                    use_container_width=True
-                )
-
-        st.divider()
-
-        # =====================================================
-        # SCORE + SOURCE
-        # =====================================================
-
-        col1, col2 = (
-            st.columns(
-                2
-            )
-        )
-
-        with col1:
-
-            st.subheader(
-                "Top Recommendation Score Distribution"
-            )
 
             if (
                 "Top Recommendation Score"
                 in data.columns
             ):
+
+                st.markdown(
+                    "### 📈 Recommendation Score Distribution"
+                )
 
                 score_data = (
                     data[
@@ -1211,16 +1493,26 @@ class RecommendationIntelligence:
 
                 if not score_data.empty:
 
-                    score_chart = (
-                        px.histogram(
-                            score_data,
-                            x=
-                                "Top Recommendation Score",
-                            nbins=
-                                30,
-                            title=
-                                "Recommendation Ranking Scores"
-                        )
+                    score_chart = px.histogram(
+                        score_data,
+
+                        x=
+                            "Top Recommendation Score",
+
+                        nbins=
+                            35,
+
+                        color=(
+                            "Recommendation Source"
+                            if
+                            "Recommendation Source"
+                            in score_data.columns
+                            else
+                            None
+                        ),
+
+                        title=
+                            "Top Recommendation Ranking Scores"
                     )
 
                     st.plotly_chart(
@@ -1228,417 +1520,436 @@ class RecommendationIntelligence:
                         use_container_width=True
                     )
 
-                else:
-
-                    st.info(
-                        "Recommendation score data "
-                        "is not available."
-                    )
-
-            else:
-
-                st.info(
-                    "Recommendation score data "
-                    "is not available."
-                )
-
-        with col2:
-
-            st.subheader(
-                "Recommendation Source"
+            st.info(
+                "Recommendation scores are ranking signals. "
+                "They are not calibrated probabilities "
+                "of purchase."
             )
 
-            sources = (
-                self.source_distribution(
-                    data
-                )
+
+        # =====================================================
+        # TAB 2 — PRODUCTS
+        # =====================================================
+
+        with tab2:
+
+            st.markdown(
+                "### 🛍️ Recommended Product Landscape"
             )
 
-            if sources.empty:
+            treemap = self._product_treemap(
+                data,
+                top_n=30
+            )
 
-                st.info(
-                    "Recommendation source information "
-                    "is not available."
-                )
-
-            else:
-
-                source_chart = (
-                    px.pie(
-                        sources,
-                        names=
-                            "Recommendation Source",
-                        values=
-                            "Customers",
-                        title=
-                            "Recommendation Strategy Usage"
-                    )
-                )
+            if treemap is not None:
 
                 st.plotly_chart(
-                    source_chart,
+                    treemap,
                     use_container_width=True
                 )
 
-        st.caption(
-            "Recommendation scores are model-specific "
-            "ranking signals. They are not calibrated "
-            "purchase probabilities."
-        )
-
-        st.divider()
-
-        # =====================================================
-        # PRODUCTS BY SEGMENT
-        # =====================================================
-
-        st.subheader(
-            "Top Recommended Products by Customer Segment"
-        )
-
-        segment_products = (
-            self.products_by_segment(
-                data,
-                top_n_per_segment=5
-            )
-        )
-
-        if segment_products.empty:
-
-            st.info(
-                "Customer Segment recommendation "
-                "analysis is not available."
+            all_products = (
+                self.all_product_distribution(
+                    data,
+                    top_n=20
+                )
             )
 
-        else:
+            if not all_products.empty:
 
-            segment_chart = (
-                px.bar(
+                chart = px.bar(
+                    all_products,
+
+                    x=
+                        "Recommendation Count",
+
+                    y=
+                        "Product",
+
+                    orientation=
+                        "h",
+
+                    color=
+                        "Recommendation Count",
+
+                    text=
+                        "Recommendation Count",
+
+                    color_continuous_scale=
+                        "Plasma",
+
+                    title=
+                        "Most Recommended Products Across Top-N"
+                )
+
+                chart.update_layout(
+                    yaxis={
+                        "categoryorder":
+                            "total ascending"
+                    },
+
+                    coloraxis_showscale=
+                        False,
+
+                    height=
+                        600
+                )
+
+                st.plotly_chart(
+                    chart,
+                    use_container_width=True
+                )
+
+
+        # =====================================================
+        # TAB 3 — CUSTOMER GROUPS
+        # =====================================================
+
+        with tab3:
+
+            st.markdown(
+                "### 🧩 Recommendations by Customer Segment"
+            )
+
+            segment_products = (
+                self.products_by_segment(
+                    data,
+                    top_n_per_segment=5
+                )
+            )
+
+            if segment_products.empty:
+
+                st.info(
+                    "Segment recommendation analysis "
+                    "is not available."
+                )
+
+            else:
+
+                segment_chart = px.bar(
                     segment_products,
+
                     x=
                         "Customer Segment",
+
                     y=
                         "Customers",
+
                     color=
                         "Top Recommended Product",
+
                     barmode=
                         "group",
+
                     hover_data=[
                         "Segment Product Rank"
                     ],
+
                     title=
-                        "Top Products Within Each Segment"
+                        "Top Products by Customer Segment"
                 )
-            )
 
-            st.plotly_chart(
-                segment_chart,
-                use_container_width=True
-            )
+                st.plotly_chart(
+                    segment_chart,
+                    use_container_width=True
+                )
 
-            st.dataframe(
-                segment_products,
-                use_container_width=True,
-                hide_index=True
-            )
-
-        st.divider()
-
-        # =====================================================
-        # CLV + CHURN ANALYSIS
-        # =====================================================
-
-        left, right = (
-            st.columns(
+            col1, col2 = st.columns(
                 2
-            )
-        )
-
-        with left:
-
-            st.subheader(
-                "Recommendations by CLV Value Band"
-            )
-
-            band_products = (
-                self.products_by_clv_band(
-                    data,
-                    top_n_per_band=5
-                )
-            )
-
-            if band_products.empty:
-
-                st.info(
-                    "CLV Value Band recommendation "
-                    "analysis is not available."
-                )
-
-            else:
-
-                band_chart = (
-                    px.bar(
-                        band_products,
-                        x=
-                            "CLV Value Band",
-                        y=
-                            "Customers",
-                        color=
-                            "Top Recommended Product",
-                        barmode=
-                            "group",
-                        title=
-                            "Top Products by Customer Value Band"
-                    )
-                )
-
-                st.plotly_chart(
-                    band_chart,
-                    use_container_width=True
-                )
-
-        with right:
-
-            st.subheader(
-                "Recommendations by Churn Risk"
-            )
-
-            risk_products = (
-                self.products_by_churn_risk(
-                    data,
-                    top_n_per_risk=5
-                )
-            )
-
-            if risk_products.empty:
-
-                st.info(
-                    "Churn Risk recommendation "
-                    "analysis is not available."
-                )
-
-            else:
-
-                risk_chart = (
-                    px.bar(
-                        risk_products,
-                        x=
-                            "Churn Risk",
-                        y=
-                            "Customers",
-                        color=
-                            "Top Recommended Product",
-                        barmode=
-                            "group",
-                        title=
-                            "Top Products by Churn Risk"
-                    )
-                )
-
-                st.plotly_chart(
-                    risk_chart,
-                    use_container_width=True
-                )
-
-        st.divider()
-
-        # =====================================================
-        # CUSTOMER RECOMMENDATION EXPLORER
-        # =====================================================
-
-        st.subheader(
-            "Customer Recommendation Explorer"
-        )
-
-        customer_options = (
-            data[
-                CUSTOMER_ID
-            ]
-            .dropna()
-            .drop_duplicates()
-            .tolist()
-        )
-
-        selected_customer = (
-            st.selectbox(
-                "Select Customer ID",
-                options=
-                    customer_options,
-                key=
-                    "recommendation_customer_explorer"
-            )
-        )
-
-        customer = (
-            self.customer_summary(
-                data,
-                selected_customer
-            )
-        )
-
-        if customer is None:
-
-            st.warning(
-                "Customer not found."
-            )
-
-        else:
-
-            col1, col2, col3, col4 = (
-                st.columns(
-                    4
-                )
             )
 
             with col1:
 
-                st.metric(
-                    "Customer ID",
-                    customer.get(
-                        CUSTOMER_ID,
-                        ""
+                st.markdown(
+                    "#### 💎 Products by CLV Band"
+                )
+
+                band_products = (
+                    self.products_by_clv_band(
+                        data,
+                        top_n_per_band=5
                     )
                 )
+
+                if band_products.empty:
+
+                    st.info(
+                        "CLV-band recommendation "
+                        "analysis is not available."
+                    )
+
+                else:
+
+                    band_chart = px.bar(
+                        band_products,
+
+                        x=
+                            "CLV Value Band",
+
+                        y=
+                            "Customers",
+
+                        color=
+                            "Top Recommended Product",
+
+                        barmode=
+                            "group",
+
+                        title=
+                            "Top Products by Value Band"
+                    )
+
+                    st.plotly_chart(
+                        band_chart,
+                        use_container_width=True
+                    )
 
             with col2:
 
-                st.metric(
-                    "Segment",
-                    customer.get(
-                        "Customer Segment",
-                        "N/A"
+                st.markdown(
+                    "#### ⚠️ Products by Churn Risk"
+                )
+
+                risk_products = (
+                    self.products_by_churn_risk(
+                        data,
+                        top_n_per_risk=5
                     )
                 )
 
-            with col3:
+                if risk_products.empty:
 
-                st.metric(
-                    "Churn Risk",
-                    customer.get(
-                        "Churn Risk",
-                        "N/A"
+                    st.info(
+                        "Churn-risk recommendation "
+                        "analysis is not available."
                     )
-                )
 
-            with col4:
+                else:
 
-                st.metric(
-                    "CLV Value Band",
-                    customer.get(
-                        "CLV Value Band",
-                        "N/A"
+                    risk_chart = px.bar(
+                        risk_products,
+
+                        x=
+                            "Churn Risk",
+
+                        y=
+                            "Customers",
+
+                        color=
+                            "Top Recommended Product",
+
+                        barmode=
+                            "group",
+
+                        title=
+                            "Top Products by Churn Risk"
                     )
-                )
 
-            # -------------------------------------------------
-            # Top recommendation
-            # -------------------------------------------------
+                    st.plotly_chart(
+                        risk_chart,
+                        use_container_width=True
+                    )
 
-            st.write(
-                "**Top Recommended Product:**",
-                customer.get(
-                    "Top Recommended Product",
-                    "Not Available"
+
+        # =====================================================
+        # TAB 4 — CUSTOMER EXPLORER
+        # =====================================================
+
+        with tab4:
+
+            st.markdown(
+                "### 👤 Customer Recommendation Explorer"
+            )
+
+            customer_options = (
+                data[
+                    CUSTOMER_ID
+                ]
+                .dropna()
+                .drop_duplicates()
+                .tolist()
+            )
+
+            selected_customer = (
+                st.selectbox(
+                    "Select Customer ID",
+
+                    options=
+                        customer_options,
+
+                    key=
+                        "premium_recommendation_customer"
                 )
             )
 
-            if (
-                "Recommendation Source"
-                in data.columns
-            ):
-
-                st.write(
-                    "**Recommendation Source:**",
-                    customer.get(
-                        "Recommendation Source",
-                        "Not Available"
-                    )
-                )
-
-            if (
-                "Top Recommendation Score"
-                in data.columns
-                and
-                pd.notna(
-                    customer.get(
-                        "Top Recommendation Score"
-                    )
-                )
-            ):
-
-                st.write(
-                    "**Top Recommendation Score:** "
-                    f"{float(customer['Top Recommendation Score']):.4f}"
-                )
-
-            recommendations = (
-                self.customer_recommendations(
+            customer = (
+                self.customer_summary(
                     data,
                     selected_customer
                 )
             )
 
-            if recommendations.empty:
+            if customer is None:
 
-                st.info(
-                    "No Top-N recommendations available "
-                    "for this customer."
+                st.warning(
+                    "Customer not found."
                 )
 
             else:
 
-                st.dataframe(
-                    recommendations,
-                    use_container_width=True,
-                    hide_index=True
+                row = st.columns(
+                    4
                 )
 
-        st.divider()
+                with row[0]:
 
-        # =====================================================
-        # COMPLETE RECOMMENDATION TABLE
-        # =====================================================
+                    render_color_card(
+                        title=
+                            "Customer ID",
 
-        st.subheader(
-            "Customer Recommendation Summary"
-        )
+                        value=
+                            customer.get(
+                                CUSTOMER_ID,
+                                ""
+                            ),
 
-        desired_columns = [
-            CUSTOMER_ID,
-            "Customer Segment",
-            "Churn Risk",
-            "CLV Value Band",
-            "Top Recommended Stock Code",
-            "Top Recommended Product",
-            "Top Recommendation Score",
-            "Recommendation Source",
-            "Recommended Products"
-        ]
+                        icon=
+                            "👤",
 
-        available_columns = [
-            column
-            for column in desired_columns
-            if column in data.columns
-        ]
+                        card_class=
+                            "card-blue"
+                    )
 
-        recommendation_table = (
-            data[
-                available_columns
-            ]
-            .copy()
-        )
+                with row[1]:
 
-        st.dataframe(
-            recommendation_table,
-            use_container_width=True,
-            hide_index=True
-        )
+                    render_color_card(
+                        title=
+                            "Segment",
 
-        st.caption(
-            "The current dashboard is based on the "
-            "persisted recommendation output generated "
-            "for the current production mode. "
-            "A direct next-purchase versus discovery "
-            "comparison would require storing predictions "
-            "from both modes separately."
-        )
+                        value=
+                            customer.get(
+                                "Customer Segment",
+                                "N/A"
+                            ),
+
+                        icon=
+                            "🧩",
+
+                        card_class=
+                            "card-purple"
+                    )
+
+                with row[2]:
+
+                    render_color_card(
+                        title=
+                            "Churn Risk",
+
+                        value=
+                            format_risk_badge(
+                                customer.get(
+                                    "Churn Risk",
+                                    "Unknown"
+                                )
+                            ),
+
+                        icon=
+                            "⚠️",
+
+                        card_class=
+                            "card-red"
+                    )
+
+                with row[3]:
+
+                    render_color_card(
+                        title=
+                            "CLV Band",
+
+                        value=
+                            format_clv_badge(
+                                customer.get(
+                                    "CLV Value Band",
+                                    "Unknown"
+                                )
+                            ),
+
+                        icon=
+                            "💎",
+
+                        card_class=
+                            "card-green"
+                    )
+
+                st.write("")
+
+                st.markdown(
+                    "### 🎯 Personalized Top Recommendations"
+                )
+
+                recommendations = (
+                    self.customer_recommendations(
+                        data,
+                        selected_customer
+                    )
+                )
+
+                self._render_recommendation_cards(
+                    recommendations
+                )
+
+                st.write("")
+
+                if (
+                    "Recommendation Source"
+                    in data.columns
+                ):
+
+                    st.info(
+                        (
+                            "Recommendation Source: "
+                            f"**{customer.get('Recommendation Source', 'N/A')}**"
+                        )
+                    )
+
+                if (
+                    "Top Recommendation Score"
+                    in data.columns
+                    and
+                    pd.notna(
+                        customer.get(
+                            "Top Recommendation Score"
+                        )
+                    )
+                ):
+
+                    st.success(
+                        (
+                            "Top Ranking Score: "
+                            f"**{float(customer['Top Recommendation Score']):.4f}**"
+                        )
+                    )
+
+                st.markdown(
+                    "### 📋 Complete Recommendation Summary"
+                )
+
+                self._styled_summary_table(
+                    data[
+                        data[
+                            CUSTOMER_ID
+                        ]
+                        ==
+                        selected_customer
+                    ]
+                )
+
+            st.caption(
+                "The current dashboard reflects the "
+                "persisted production recommendation mode. "
+                "A next-purchase versus discovery comparison "
+                "requires separately generated outputs for "
+                "both modes."
+            )

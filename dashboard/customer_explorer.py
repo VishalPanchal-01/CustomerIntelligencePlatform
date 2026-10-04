@@ -3,6 +3,7 @@ import io
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 from dashboard.executive_overview import (
@@ -15,6 +16,13 @@ from dashboard.churn_intelligence import (
 
 from dashboard.recommendation_intelligence import (
     RecommendationIntelligence
+)
+
+from dashboard.ui import (
+    render_color_card,
+    format_risk_badge,
+    format_clv_badge,
+    format_priority_badge
 )
 
 
@@ -65,16 +73,13 @@ class CustomerExplorer:
 
             if column in data.columns:
 
-                data[
-                    column
-                ] = pd.to_numeric(
-                    data[
-                        column
-                    ],
+                data[column] = pd.to_numeric(
+                    data[column],
                     errors="coerce"
                 )
 
         return data
+
 
     # =========================================================
     # GET CUSTOMER
@@ -86,13 +91,11 @@ class CustomerExplorer:
         customer_id
     ):
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        customer_rows = (
+        result = (
             data[
                 data[
                     CUSTOMER_ID
@@ -102,17 +105,15 @@ class CustomerExplorer:
             ]
         )
 
-        if customer_rows.empty:
+        if result.empty:
 
             return None
 
-        return (
-            customer_rows
-            .iloc[0]
-        )
+        return result.iloc[0]
+
 
     # =========================================================
-    # CUSTOMER BUSINESS PRIORITY
+    # BUSINESS PRIORITY
     # =========================================================
 
     def customer_priority(
@@ -121,10 +122,8 @@ class CustomerExplorer:
         customer_id
     ) -> dict:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
         customer_rows = (
@@ -147,9 +146,7 @@ class CustomerExplorer:
                     "Customer not found."
             }
 
-        overview = (
-            ExecutiveOverview()
-        )
+        overview = ExecutiveOverview()
 
         result = (
             overview
@@ -160,7 +157,6 @@ class CustomerExplorer:
         )
 
         return {
-
             "priority":
                 result[
                     "Customer Priority"
@@ -172,8 +168,9 @@ class CustomerExplorer:
                 ]
         }
 
+
     # =========================================================
-    # RETENTION PRIORITY SCORE
+    # RETENTION SCORE
     # =========================================================
 
     def retention_priority_score(
@@ -182,16 +179,13 @@ class CustomerExplorer:
         customer_id
     ):
 
-        churn = (
-            ChurnIntelligence()
-        )
+        churn = ChurnIntelligence()
 
         ranking = (
             churn
             .retention_priority_customers(
                 df,
-                top_n=
-                    len(df)
+                top_n=len(df)
             )
         )
 
@@ -220,6 +214,7 @@ class CustomerExplorer:
             .iloc[0]
         )
 
+
     # =========================================================
     # RETENTION RANK
     # =========================================================
@@ -230,16 +225,13 @@ class CustomerExplorer:
         customer_id
     ):
 
-        churn = (
-            ChurnIntelligence()
-        )
+        churn = ChurnIntelligence()
 
         ranking = (
             churn
             .retention_priority_customers(
                 df,
-                top_n=
-                    len(df)
+                top_n=len(df)
             )
         )
 
@@ -256,11 +248,9 @@ class CustomerExplorer:
 
         ranking[
             "Retention Rank"
-        ] = (
-            np.arange(
-                1,
-                len(ranking) + 1
-            )
+        ] = np.arange(
+            1,
+            len(ranking) + 1
         )
 
         customer = (
@@ -284,8 +274,9 @@ class CustomerExplorer:
             .iloc[0]
         )
 
+
     # =========================================================
-    # CUSTOMER BEHAVIOR PERCENTILES
+    # BEHAVIOR PERCENTILES
     # =========================================================
 
     def behavior_percentiles(
@@ -294,17 +285,13 @@ class CustomerExplorer:
         customer_id
     ) -> pd.DataFrame:
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        customer = (
-            self.get_customer(
-                data,
-                customer_id
-            )
+        customer = self.get_customer(
+            data,
+            customer_id
         )
 
         if customer is None:
@@ -313,32 +300,28 @@ class CustomerExplorer:
 
         rows = []
 
-        for feature in (
-            self.BEHAVIOR_FEATURES
-        ):
+        for feature in self.BEHAVIOR_FEATURES:
 
             if feature not in data.columns:
 
                 continue
 
-            series = (
+            population = (
                 data[
                     feature
                 ]
                 .dropna()
             )
 
-            customer_value = (
-                customer.get(
-                    feature
-                )
+            value = customer.get(
+                feature
             )
 
             if (
-                series.empty
+                population.empty
                 or
                 pd.isna(
-                    customer_value
+                    value
                 )
             ):
 
@@ -346,9 +329,9 @@ class CustomerExplorer:
 
             percentile = float(
                 (
-                    series
+                    population
                     <=
-                    customer_value
+                    value
                 )
                 .mean()
                 *
@@ -362,12 +345,12 @@ class CustomerExplorer:
 
                     "Customer Value":
                         float(
-                            customer_value
+                            value
                         ),
 
                     "Population Average":
                         float(
-                            series.mean()
+                            population.mean()
                         ),
 
                     "Percentile":
@@ -379,8 +362,9 @@ class CustomerExplorer:
             rows
         )
 
+
     # =========================================================
-    # RADAR PROFILE DATA
+    # NORMALIZED PROFILE
     # =========================================================
 
     def normalized_behavior_profile(
@@ -389,34 +373,21 @@ class CustomerExplorer:
         customer_id
     ) -> pd.DataFrame:
 
-        percentiles = (
-            self.behavior_percentiles(
-                df,
-                customer_id
-            )
+        profile = self.behavior_percentiles(
+            df,
+            customer_id
         )
 
-        if percentiles.empty:
+        if profile.empty:
 
             return pd.DataFrame()
 
-        profile = (
-            percentiles[
-                [
-                    "Feature",
-                    "Percentile"
-                ]
+        profile = profile[
+            [
+                "Feature",
+                "Percentile"
             ]
-            .copy()
-        )
-
-        # -----------------------------------------------------
-        # Recency interpretation is reversed.
-        #
-        # Lower recency = more recently active.
-        # For visualization we convert to:
-        # Customer Engagement Recency Score
-        # -----------------------------------------------------
+        ].copy()
 
         recency_mask = (
             profile[
@@ -447,8 +418,9 @@ class CustomerExplorer:
 
         return profile
 
+
     # =========================================================
-    # RECOMMENDATION LIST
+    # RECOMMENDATIONS
     # =========================================================
 
     def recommendations(
@@ -469,8 +441,9 @@ class CustomerExplorer:
             )
         )
 
+
     # =========================================================
-    # CUSTOMER REPORT DATA
+    # REPORT
     # =========================================================
 
     def build_customer_report(
@@ -479,22 +452,18 @@ class CustomerExplorer:
         customer_id
     ) -> pd.DataFrame:
 
-        customer = (
-            self.get_customer(
-                df,
-                customer_id
-            )
+        customer = self.get_customer(
+            df,
+            customer_id
         )
 
         if customer is None:
 
             return pd.DataFrame()
 
-        priority = (
-            self.customer_priority(
-                df,
-                customer_id
-            )
+        priority = self.customer_priority(
+            df,
+            customer_id
         )
 
         retention_score = (
@@ -511,8 +480,7 @@ class CustomerExplorer:
             )
         )
 
-        report_rows = [
-
+        rows = [
             {
                 "Category":
                     "Identity",
@@ -522,8 +490,7 @@ class CustomerExplorer:
 
                 "Value":
                     customer.get(
-                        CUSTOMER_ID,
-                        ""
+                        CUSTOMER_ID
                     )
             },
 
@@ -618,13 +585,7 @@ class CustomerExplorer:
                     "Retention Priority Score",
 
                 "Value":
-                    (
-                        retention_score
-                        if retention_score
-                        is not None
-                        else
-                        "Not Available"
-                    )
+                    retention_score
             },
 
             {
@@ -635,13 +596,7 @@ class CustomerExplorer:
                     "Retention Rank",
 
                 "Value":
-                    (
-                        retention_rank
-                        if retention_rank
-                        is not None
-                        else
-                        "Not Available"
-                    )
+                    retention_rank
             },
 
             {
@@ -660,20 +615,6 @@ class CustomerExplorer:
 
             {
                 "Category":
-                    "Recommendation",
-
-                "Metric":
-                    "Recommendation Source",
-
-                "Value":
-                    customer.get(
-                        "Recommendation Source",
-                        "Not Available"
-                    )
-            },
-
-            {
-                "Category":
                     "Business Action",
 
                 "Metric":
@@ -686,17 +627,11 @@ class CustomerExplorer:
             }
         ]
 
-        # -----------------------------------------------------
-        # Behavioral fields
-        # -----------------------------------------------------
-
-        for feature in (
-            self.BEHAVIOR_FEATURES
-        ):
+        for feature in self.BEHAVIOR_FEATURES:
 
             if feature in customer.index:
 
-                report_rows.append(
+                rows.append(
                     {
                         "Category":
                             "Customer Behaviour",
@@ -712,8 +647,9 @@ class CustomerExplorer:
                 )
 
         return pd.DataFrame(
-            report_rows
+            rows
         )
+
 
     # =========================================================
     # EXPORT CSV
@@ -725,11 +661,9 @@ class CustomerExplorer:
         customer_id
     ) -> bytes:
 
-        report = (
-            self.build_customer_report(
-                df,
-                customer_id
-            )
+        report = self.build_customer_report(
+            df,
+            customer_id
         )
 
         if report.empty:
@@ -751,6 +685,543 @@ class CustomerExplorer:
             )
         )
 
+
+    # =========================================================
+    # PROFILE HEADER
+    # =========================================================
+
+    def _render_profile_header(
+        self,
+        customer,
+        priority: dict,
+        retention_rank
+    ):
+
+        customer_id = customer.get(
+            CUSTOMER_ID,
+            ""
+        )
+
+        segment = customer.get(
+            "Customer Segment",
+            "Unknown"
+        )
+
+        priority_text = format_priority_badge(
+            priority[
+                "priority"
+            ]
+        )
+
+        rank_text = (
+            f"Retention Rank #{retention_rank}"
+            if retention_rank is not None
+            else
+            "Retention Rank N/A"
+        )
+
+        html = (
+            '<div style="'
+            'background:linear-gradient('
+            '120deg,#1e1b4b,#4f46e5,#7c3aed);'
+            'padding:28px 32px;'
+            'border-radius:22px;'
+            'color:white;'
+            'box-shadow:0 14px 35px '
+            'rgba(79,70,229,0.25);'
+            'margin-bottom:24px;'
+            '">'
+            '<div style="font-size:0.9rem;'
+            'opacity:0.8;">CUSTOMER 360 PROFILE</div>'
+            f'<div style="font-size:2.2rem;'
+            f'font-weight:800;'
+            f'margin-top:4px;">'
+            f'👤 Customer {customer_id}'
+            f'</div>'
+            f'<div style="font-size:1rem;'
+            f'margin-top:8px;">'
+            f'🧩 {segment}'
+            f' &nbsp;&nbsp;•&nbsp;&nbsp; '
+            f'{priority_text}'
+            f' &nbsp;&nbsp;•&nbsp;&nbsp; '
+            f'🎯 {rank_text}'
+            f'</div>'
+            '</div>'
+        )
+
+        st.markdown(
+            html,
+            unsafe_allow_html=True
+        )
+
+
+    # =========================================================
+    # RETENTION GAUGE
+    # =========================================================
+
+    def _retention_gauge(
+        self,
+        score
+    ):
+
+        if score is None:
+
+            value = 0.0
+
+        else:
+
+            value = float(
+                score
+            ) * 100
+
+        figure = go.Figure(
+            go.Indicator(
+                mode=
+                    "gauge+number",
+
+                value=
+                    value,
+
+                number={
+                    "suffix":
+                        "%"
+                },
+
+                title={
+                    "text":
+                        "Retention Priority Score"
+                },
+
+                gauge={
+                    "axis": {
+                        "range": [
+                            0,
+                            100
+                        ]
+                    },
+
+                    "bar": {
+                        "color":
+                            "#7c3aed"
+                    },
+
+                    "steps": [
+                        {
+                            "range": [
+                                0,
+                                40
+                            ],
+
+                            "color":
+                                "#dcfce7"
+                        },
+
+                        {
+                            "range": [
+                                40,
+                                70
+                            ],
+
+                            "color":
+                                "#fef3c7"
+                        },
+
+                        {
+                            "range": [
+                                70,
+                                100
+                            ],
+
+                            "color":
+                                "#fee2e2"
+                        }
+                    ]
+                }
+            )
+        )
+
+        figure.update_layout(
+            height=330,
+            margin=dict(
+                l=20,
+                r=20,
+                t=60,
+                b=20
+            )
+        )
+
+        return figure
+
+
+    # =========================================================
+    # BEHAVIOR RADAR
+    # =========================================================
+
+    def _behavior_radar(
+        self,
+        df: pd.DataFrame,
+        customer_id
+    ):
+
+        profile = (
+            self.normalized_behavior_profile(
+                df,
+                customer_id
+            )
+        )
+
+        if profile.empty:
+
+            return None
+
+        categories = (
+            profile[
+                "Feature"
+            ]
+            .tolist()
+        )
+
+        values = (
+            profile[
+                "Percentile"
+            ]
+            .tolist()
+        )
+
+        categories = (
+            categories
+            +
+            [
+                categories[0]
+            ]
+        )
+
+        values = (
+            values
+            +
+            [
+                values[0]
+            ]
+        )
+
+        figure = go.Figure()
+
+        figure.add_trace(
+            go.Scatterpolar(
+                r=
+                    values,
+
+                theta=
+                    categories,
+
+                fill=
+                    "toself",
+
+                name=
+                    "Customer",
+
+                line={
+                    "color":
+                        "#7c3aed",
+
+                    "width":
+                        3
+                },
+
+                fillcolor=
+                    "rgba(124,58,237,0.20)"
+            )
+        )
+
+        figure.update_layout(
+            polar={
+                "radialaxis": {
+                    "visible":
+                        True,
+
+                    "range": [
+                        0,
+                        100
+                    ]
+                }
+            },
+
+            title=
+                "Customer Behavioral Position",
+
+            height=
+                500,
+
+            showlegend=
+                False
+        )
+
+        return figure
+
+
+    # =========================================================
+    # BEHAVIOR COMPARISON
+    # =========================================================
+
+    def _behavior_comparison_chart(
+        self,
+        df: pd.DataFrame,
+        customer_id
+    ):
+
+        profile = (
+            self.behavior_percentiles(
+                df,
+                customer_id
+            )
+        )
+
+        if profile.empty:
+
+            return None
+
+        chart_data = (
+            profile
+            .melt(
+                id_vars=[
+                    "Feature"
+                ],
+
+                value_vars=[
+                    "Customer Value",
+                    "Population Average"
+                ],
+
+                var_name=
+                    "Measure",
+
+                value_name=
+                    "Value"
+            )
+        )
+
+        figure = px.bar(
+            chart_data,
+
+            x=
+                "Feature",
+
+            y=
+                "Value",
+
+            color=
+                "Measure",
+
+            barmode=
+                "group",
+
+            title=
+                "Customer vs Population Average"
+        )
+
+        figure.update_layout(
+            height=450
+        )
+
+        return figure
+
+
+    # =========================================================
+    # PRODUCT CARDS
+    # =========================================================
+
+    def _render_product_cards(
+        self,
+        recommendations: pd.DataFrame
+    ):
+
+        if recommendations.empty:
+
+            st.info(
+                "No Top-N recommendations available."
+            )
+
+            return
+
+        cards = recommendations.head(
+            5
+        )
+
+        columns = st.columns(
+            len(cards)
+        )
+
+        for position, (
+            _,
+            row
+        ) in enumerate(
+            cards.iterrows()
+        ):
+
+            with columns[position]:
+
+                rank = row.get(
+                    "Rank",
+                    position + 1
+                )
+
+                product = row.get(
+                    "Product",
+                    "Unknown Product"
+                )
+
+                code = row.get(
+                    "Stock Code",
+                    ""
+                )
+
+                st.markdown(
+                    (
+                        '<div style="'
+                        'background:linear-gradient('
+                        '135deg,#2563eb,#7c3aed);'
+                        'padding:18px;'
+                        'border-radius:18px;'
+                        'color:white;'
+                        'min-height:190px;'
+                        'box-shadow:0 10px 30px '
+                        'rgba(79,70,229,0.22);'
+                        '">'
+                        f'<div style="font-size:0.8rem;'
+                        f'opacity:0.8;">'
+                        f'RECOMMENDATION #{rank}'
+                        f'</div>'
+                        f'<div style="font-size:1rem;'
+                        f'font-weight:700;'
+                        f'margin-top:12px;">'
+                        f'{product}'
+                        f'</div>'
+                        f'<div style="font-size:0.8rem;'
+                        f'margin-top:18px;'
+                        f'opacity:0.85;">'
+                        f'Stock Code: {code}'
+                        f'</div>'
+                        '</div>'
+                    ),
+
+                    unsafe_allow_html=True
+                )
+
+
+    # =========================================================
+    # BUSINESS ACTION PANEL
+    # =========================================================
+
+    def _render_action_panel(
+        self,
+        priority: dict
+    ):
+
+        value = priority.get(
+            "priority",
+            "Unknown"
+        )
+
+        action = priority.get(
+            "business_action",
+            "No action available."
+        )
+
+        if value == "Critical":
+
+            background = (
+                "linear-gradient(135deg,#991b1b,#dc2626)"
+            )
+
+            icon = "🔥"
+
+        elif value == "High":
+
+            background = (
+                "linear-gradient(135deg,#c2410c,#f97316)"
+            )
+
+            icon = "⚠️"
+
+        elif value == "Medium":
+
+            background = (
+                "linear-gradient(135deg,#a16207,#eab308)"
+            )
+
+            icon = "🎯"
+
+        else:
+
+            background = (
+                "linear-gradient(135deg,#047857,#10b981)"
+            )
+
+            icon = "✅"
+
+        html = (
+            f'<div style="'
+            f'background:{background};'
+            f'padding:24px;'
+            f'border-radius:18px;'
+            f'color:white;'
+            f'box-shadow:0 10px 25px '
+            f'rgba(0,0,0,0.12);'
+            f'">'
+            f'<div style="font-size:0.85rem;'
+            f'opacity:0.85;">'
+            f'RECOMMENDED BUSINESS ACTION'
+            f'</div>'
+            f'<div style="font-size:1.25rem;'
+            f'font-weight:700;'
+            f'margin-top:8px;">'
+            f'{icon} {value} Priority'
+            f'</div>'
+            f'<div style="font-size:0.95rem;'
+            f'margin-top:12px;'
+            f'line-height:1.6;">'
+            f'{action}'
+            f'</div>'
+            f'</div>'
+        )
+
+        st.markdown(
+            html,
+            unsafe_allow_html=True
+        )
+
+
+    # =========================================================
+    # COMPLETE RECORD TABLE
+    # =========================================================
+
+    def _styled_record(
+        self,
+        customer
+    ):
+
+        record = (
+            customer
+            .to_frame(
+                name="Value"
+            )
+            .reset_index()
+            .rename(
+                columns={
+                    "index":
+                        "Metric"
+                }
+            )
+        )
+
+        st.dataframe(
+            record,
+            use_container_width=True,
+            hide_index=True,
+            height=520
+        )
+
+
     # =========================================================
     # RENDER
     # =========================================================
@@ -760,25 +1231,19 @@ class CustomerExplorer:
         df: pd.DataFrame
     ):
 
-        data = (
-            self.prepare_data(
-                df
-            )
+        data = self.prepare_data(
+            df
         )
 
-        st.title(
-            "360° Customer Explorer"
+        st.markdown(
+            "## 👤 360° Customer Explorer"
         )
 
         st.caption(
-            "Unified customer-level intelligence combining "
-            "behaviour, segmentation, churn, predicted "
-            "90-day revenue and product recommendations."
+            "A unified CRM-style customer profile combining "
+            "behavior, churn, predicted value, segmentation "
+            "and product recommendations."
         )
-
-        # =====================================================
-        # CUSTOMER SELECTOR
-        # =====================================================
 
         customer_options = (
             data[
@@ -792,18 +1257,18 @@ class CustomerExplorer:
         selected_customer = (
             st.selectbox(
                 "Select Customer ID",
+
                 options=
                     customer_options,
+
                 key=
-                    "final_customer_explorer"
+                    "premium_360_customer"
             )
         )
 
-        customer = (
-            self.get_customer(
-                data,
-                selected_customer
-            )
+        customer = self.get_customer(
+            data,
+            selected_customer
         )
 
         if customer is None:
@@ -814,11 +1279,9 @@ class CustomerExplorer:
 
             return
 
-        priority = (
-            self.customer_priority(
-                data,
-                selected_customer
-            )
+        priority = self.customer_priority(
+            data,
+            selected_customer
         )
 
         retention_score = (
@@ -836,486 +1299,533 @@ class CustomerExplorer:
         )
 
         # =====================================================
-        # CUSTOMER IDENTITY
+        # PROFILE HEADER
         # =====================================================
 
-        st.subheader(
-            "Customer Intelligence Summary"
+        self._render_profile_header(
+            customer,
+            priority,
+            retention_rank
         )
-
-        col1, col2, col3, col4 = (
-            st.columns(
-                4
-            )
-        )
-
-        with col1:
-
-            st.metric(
-                "Customer ID",
-                customer.get(
-                    CUSTOMER_ID,
-                    ""
-                )
-            )
-
-        with col2:
-
-            st.metric(
-                "Customer Segment",
-                customer.get(
-                    "Customer Segment",
-                    "N/A"
-                )
-            )
-
-        with col3:
-
-            st.metric(
-                "Customer Priority",
-                priority[
-                    "priority"
-                ]
-            )
-
-        with col4:
-
-            st.metric(
-                "Retention Rank",
-                (
-                    f"#{retention_rank}"
-                    if retention_rank
-                    is not None
-                    else
-                    "N/A"
-                )
-            )
-
-        st.divider()
 
         # =====================================================
-        # CHURN + CLV
+        # TOP KPI CARDS
         # =====================================================
 
-        st.subheader(
-            "Risk and Customer Value"
+        row1 = st.columns(
+            4
         )
 
-        col1, col2, col3, col4 = (
-            st.columns(
-                4
-            )
-        )
-
-        with col1:
-
-            churn_probability = (
-                customer.get(
-                    "Churn Probability"
-                )
-            )
-
-            if pd.notna(
-                churn_probability
-            ):
-
-                churn_text = (
-                    f"{float(churn_probability) * 100:.2f}%"
-                )
-
-            else:
-
-                churn_text = "N/A"
-
-            st.metric(
-                "Churn Probability",
-                churn_text
-            )
-
-        with col2:
-
-            st.metric(
-                "Churn Risk",
-                customer.get(
-                    "Churn Risk",
-                    "N/A"
-                )
-            )
-
-        with col3:
-
-            revenue = (
-                customer.get(
-                    "Predicted 90-Day Revenue"
-                )
-            )
-
-            if pd.notna(
-                revenue
-            ):
-
-                revenue_text = (
-                    f"{float(revenue):,.2f}"
-                )
-
-            else:
-
-                revenue_text = "N/A"
-
-            st.metric(
-                "Predicted 90-Day Revenue",
-                revenue_text
-            )
-
-        with col4:
-
-            st.metric(
-                "CLV Value Band",
-                customer.get(
-                    "CLV Value Band",
-                    "N/A"
-                )
-            )
-
-        # =====================================================
-        # RETENTION PRIORITY
-        # =====================================================
-
-        col5, col6 = (
-            st.columns(
-                2
-            )
-        )
-
-        with col5:
-
-            st.metric(
-                "Retention Priority Score",
-                (
-                    f"{retention_score:.4f}"
-                    if retention_score
-                    is not None
-                    else
-                    "N/A"
-                )
-            )
-
-        with col6:
-
-            st.write(
-                "**Recommended Business Action**"
-            )
-
-            st.write(
-                priority[
-                    "business_action"
-                ]
-            )
-
-        st.caption(
-            "Customer Priority and Retention Priority Score "
-            "are decision-support rules built from existing "
-            "model outputs. They are not additional ML models."
-        )
-
-        st.divider()
-
-        # =====================================================
-        # CUSTOMER BEHAVIOUR
-        # =====================================================
-
-        st.subheader(
-            "Customer Behaviour Profile"
-        )
-
-        behavior_columns = (
-            st.columns(
-                6
-            )
-        )
-
-        for container, feature in zip(
-            behavior_columns,
-            self.BEHAVIOR_FEATURES
-        ):
-
-            value = (
-                customer.get(
-                    feature
-                )
-            )
-
-            with container:
-
-                if pd.isna(
-                    value
-                ):
-
-                    display_value = "N/A"
-
-                elif isinstance(
-                    value,
-                    (
-                        float,
-                        np.floating
-                    )
-                ):
-
-                    display_value = (
-                        f"{float(value):,.2f}"
-                    )
-
-                else:
-
-                    display_value = str(
-                        value
-                    )
-
-                st.metric(
-                    feature,
-                    display_value
-                )
-
-        # =====================================================
-        # BEHAVIORAL COMPARISON
-        # =====================================================
-
-        percentiles = (
-            self.behavior_percentiles(
-                data,
-                selected_customer
-            )
-        )
-
-        if not percentiles.empty:
-
-            st.subheader(
-                "Customer vs Population"
-            )
-
-            comparison_chart = (
-                px.bar(
-                    percentiles,
-                    x=
-                        "Feature",
-                    y=
-                        "Percentile",
-                    text=
-                        "Percentile",
-                    hover_data=[
-                        "Customer Value",
-                        "Population Average"
-                    ],
-                    title=
-                        "Customer Behaviour Percentile"
-                )
-            )
-
-            comparison_chart.update_layout(
-                yaxis_title=
-                    "Population Percentile",
-
-                yaxis_range=[
-                    0,
-                    100
-                ]
-            )
-
-            st.plotly_chart(
-                comparison_chart,
-                use_container_width=True
-            )
-
-            st.caption(
-                "Percentiles describe where this customer's "
-                "feature value sits within the current "
-                "customer population. For Recency, a higher "
-                "raw percentile means a longer time since "
-                "the last purchase."
-            )
-
-        st.divider()
-
-        # =====================================================
-        # RECOMMENDATION
-        # =====================================================
-
-        st.subheader(
-            "Personalized Product Recommendations"
-        )
-
-        col1, col2, col3 = (
-            st.columns(
-                3
-            )
-        )
-
-        with col1:
-
-            st.metric(
-                "Top Product",
-                customer.get(
-                    "Top Recommended Product",
-                    "N/A"
-                )
-            )
-
-        with col2:
-
-            st.metric(
-                "Top Stock Code",
-                customer.get(
-                    "Top Recommended Stock Code",
-                    "N/A"
-                )
-            )
-
-        with col3:
-
-            recommendation_score = (
-                customer.get(
-                    "Top Recommendation Score"
-                )
-            )
-
-            if pd.notna(
-                recommendation_score
-            ):
-
-                score_text = (
-                    f"{float(recommendation_score):.4f}"
-                )
-
-            else:
-
-                score_text = "N/A"
-
-            st.metric(
-                "Top Recommendation Score",
-                score_text
-            )
-
-        source = (
-            customer.get(
-                "Recommendation Source"
-            )
+        churn_probability = customer.get(
+            "Churn Probability"
         )
 
         if pd.notna(
-            source
+            churn_probability
         ):
 
-            st.write(
-                f"**Recommendation Source:** {source}"
-            )
-
-        recommendations = (
-            self.recommendations(
-                data,
-                selected_customer
-            )
-        )
-
-        if recommendations.empty:
-
-            st.info(
-                "No Top-N recommendations "
-                "available for this customer."
+            churn_value = (
+                f"{float(churn_probability) * 100:.1f}%"
             )
 
         else:
 
+            churn_value = "N/A"
+
+        revenue = customer.get(
+            "Predicted 90-Day Revenue"
+        )
+
+        if pd.notna(
+            revenue
+        ):
+
+            revenue_value = (
+                f"{float(revenue):,.0f}"
+            )
+
+        else:
+
+            revenue_value = "N/A"
+
+        with row1[0]:
+
+            render_color_card(
+                title=
+                    "Churn Probability",
+
+                value=
+                    churn_value,
+
+                icon=
+                    "⚠️",
+
+                card_class=
+                    "card-red"
+            )
+
+        with row1[1]:
+
+            render_color_card(
+                title=
+                    "Churn Risk",
+
+                value=
+                    format_risk_badge(
+                        customer.get(
+                            "Churn Risk",
+                            "Unknown"
+                        )
+                    ),
+
+                icon=
+                    "📉",
+
+                card_class=
+                    "card-red"
+            )
+
+        with row1[2]:
+
+            render_color_card(
+                title=
+                    "Predicted 90-Day Revenue",
+
+                value=
+                    revenue_value,
+
+                icon=
+                    "💰",
+
+                card_class=
+                    "card-green"
+            )
+
+        with row1[3]:
+
+            render_color_card(
+                title=
+                    "CLV Value Band",
+
+                value=
+                    format_clv_badge(
+                        customer.get(
+                            "CLV Value Band",
+                            "Unknown"
+                        )
+                    ),
+
+                icon=
+                    "💎",
+
+                card_class=
+                    "card-purple"
+            )
+
+        st.write("")
+
+        row2 = st.columns(
+            3
+        )
+
+        with row2[0]:
+
+            render_color_card(
+                title=
+                    "Customer Segment",
+
+                value=
+                    customer.get(
+                        "Customer Segment",
+                        "N/A"
+                    ),
+
+                icon=
+                    "🧩",
+
+                card_class=
+                    "card-blue"
+            )
+
+        with row2[1]:
+
+            render_color_card(
+                title=
+                    "Customer Priority",
+
+                value=
+                    format_priority_badge(
+                        priority[
+                            "priority"
+                        ]
+                    ),
+
+                icon=
+                    "🔥",
+
+                card_class=
+                    "card-purple"
+            )
+
+        with row2[2]:
+
+            render_color_card(
+                title=
+                    "Retention Rank",
+
+                value=(
+                    f"#{retention_rank}"
+                    if retention_rank is not None
+                    else
+                    "N/A"
+                ),
+
+                icon=
+                    "🎯",
+
+                card_class=
+                    "card-green"
+            )
+
+        st.write("")
+        st.divider()
+
+        # =====================================================
+        # TABS
+        # =====================================================
+
+        tab1, tab2, tab3, tab4 = (
+            st.tabs(
+                [
+                    "📊 Customer Summary",
+                    "🧠 Behaviour Profile",
+                    "🎯 Recommendations",
+                    "📄 Report & Export"
+                ]
+            )
+        )
+
+        # =====================================================
+        # TAB 1 — SUMMARY
+        # =====================================================
+
+        with tab1:
+
+            col1, col2 = st.columns(
+                2
+            )
+
+            with col1:
+
+                gauge = (
+                    self._retention_gauge(
+                        retention_score
+                    )
+                )
+
+                st.plotly_chart(
+                    gauge,
+                    use_container_width=True
+                )
+
+            with col2:
+
+                st.markdown(
+                    "### 🎯 Recommended Action"
+                )
+
+                self._render_action_panel(
+                    priority
+                )
+
+                st.info(
+                    "Customer Priority and Retention Priority "
+                    "are decision-support rules built from "
+                    "existing ML outputs. They are not "
+                    "additional trained models."
+                )
+
+            st.markdown(
+                "### 📌 Customer Snapshot"
+            )
+
+            snapshot = []
+
+            for field in [
+                "Recency",
+                "Frequency",
+                "Monetary",
+                "AverageOrderValue",
+                "Tenure",
+                "Top Recommended Product"
+            ]:
+
+                if field in customer.index:
+
+                    snapshot.append(
+                        {
+                            "Metric":
+                                field,
+
+                            "Value":
+                                customer.get(
+                                    field
+                                )
+                        }
+                    )
+
             st.dataframe(
-                recommendations,
+                pd.DataFrame(
+                    snapshot
+                ),
                 use_container_width=True,
                 hide_index=True
             )
 
-        st.caption(
-            "Recommendation scores are ranking signals, "
-            "not purchase probabilities."
-        )
-
-        st.divider()
 
         # =====================================================
-        # COMPLETE RECORD
+        # TAB 2 — BEHAVIOUR
         # =====================================================
 
-        st.subheader(
-            "Complete Customer Intelligence Record"
-        )
+        with tab2:
 
-        record = (
-            customer
-            .to_frame(
-                name="Value"
+            col1, col2 = st.columns(
+                2
             )
-        )
 
-        st.dataframe(
-            record,
-            use_container_width=True
-        )
+            with col1:
 
-        st.divider()
+                radar = (
+                    self._behavior_radar(
+                        data,
+                        selected_customer
+                    )
+                )
+
+                if radar is not None:
+
+                    st.plotly_chart(
+                        radar,
+                        use_container_width=True
+                    )
+
+            with col2:
+
+                comparison = (
+                    self._behavior_comparison_chart(
+                        data,
+                        selected_customer
+                    )
+                )
+
+                if comparison is not None:
+
+                    st.plotly_chart(
+                        comparison,
+                        use_container_width=True
+                    )
+
+            percentiles = (
+                self.behavior_percentiles(
+                    data,
+                    selected_customer
+                )
+            )
+
+            if not percentiles.empty:
+
+                st.markdown(
+                    "### 📊 Population Percentiles"
+                )
+
+                percentile_chart = px.bar(
+                    percentiles,
+
+                    x=
+                        "Feature",
+
+                    y=
+                        "Percentile",
+
+                    color=
+                        "Percentile",
+
+                    text=
+                        "Percentile",
+
+                    color_continuous_scale=
+                        "Viridis",
+
+                    hover_data=[
+                        "Customer Value",
+                        "Population Average"
+                    ],
+
+                    title=
+                        "Customer Position in Overall Population"
+                )
+
+                percentile_chart.update_layout(
+                    coloraxis_showscale=False,
+
+                    yaxis_range=[
+                        0,
+                        100
+                    ]
+                )
+
+                st.plotly_chart(
+                    percentile_chart,
+                    use_container_width=True
+                )
+
+            st.caption(
+                "For raw Recency, a lower value means "
+                "the customer purchased more recently. "
+                "The radar reverses Recency so a higher "
+                "engagement score represents more recent activity."
+            )
+
 
         # =====================================================
-        # DOWNLOADABLE REPORT
+        # TAB 3 — RECOMMENDATIONS
         # =====================================================
 
-        st.subheader(
-            "Export Customer Intelligence"
-        )
+        with tab3:
 
-        report = (
-            self.build_customer_report(
-                data,
-                selected_customer
+            st.markdown(
+                "### 🎯 Personalized Recommendations"
             )
-        )
 
-        st.dataframe(
-            report,
-            use_container_width=True,
-            hide_index=True
-        )
-
-        report_bytes = (
-            self.customer_report_csv(
-                data,
-                selected_customer
+            recommendations = (
+                self.recommendations(
+                    data,
+                    selected_customer
+                )
             )
-        )
 
-        safe_customer_id = (
-            str(
-                selected_customer
+            self._render_product_cards(
+                recommendations
             )
-            .replace(
-                " ",
-                "_"
+
+            st.write("")
+
+            if (
+                "Recommendation Source"
+                in customer.index
+            ):
+
+                st.info(
+                    (
+                        "Recommendation Source: "
+                        f"**{customer.get('Recommendation Source', 'N/A')}**"
+                    )
+                )
+
+            if (
+                "Top Recommendation Score"
+                in customer.index
+                and
+                pd.notna(
+                    customer.get(
+                        "Top Recommendation Score"
+                    )
+                )
+            ):
+
+                st.success(
+                    (
+                        "Top Recommendation Ranking Score: "
+                        f"**{float(customer['Top Recommendation Score']):.4f}**"
+                    )
+                )
+
+            if not recommendations.empty:
+
+                st.dataframe(
+                    recommendations,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+            st.warning(
+                "Recommendation scores are ranking signals. "
+                "They should not be interpreted as purchase "
+                "probabilities."
             )
-            .replace(
-                "/",
-                "_"
+
+
+        # =====================================================
+        # TAB 4 — REPORT
+        # =====================================================
+
+        with tab4:
+
+            st.markdown(
+                "### 📄 Complete Customer Intelligence Record"
             )
-        )
 
-        st.download_button(
-            label=
-                "Download Customer Intelligence Report",
+            self._styled_record(
+                customer
+            )
 
-            data=
-                report_bytes,
+            st.divider()
 
-            file_name=
-                (
-                    f"customer_"
-                    f"{safe_customer_id}_"
-                    f"intelligence_report.csv"
-                ),
+            st.markdown(
+                "### 📥 Export Customer Intelligence Report"
+            )
 
-            mime=
-                "text/csv"
-        )
+            report = (
+                self.build_customer_report(
+                    data,
+                    selected_customer
+                )
+            )
+
+            st.dataframe(
+                report,
+                use_container_width=True,
+                hide_index=True
+            )
+
+            report_bytes = (
+                self.customer_report_csv(
+                    data,
+                    selected_customer
+                )
+            )
+
+            safe_customer_id = (
+                str(
+                    selected_customer
+                )
+                .replace(
+                    " ",
+                    "_"
+                )
+                .replace(
+                    "/",
+                    "_"
+                )
+            )
+
+            st.download_button(
+                label=
+                    "📥 Download Customer Intelligence Report",
+
+                data=
+                    report_bytes,
+
+                file_name=
+                    (
+                        f"customer_"
+                        f"{safe_customer_id}_"
+                        f"intelligence_report.csv"
+                    ),
+
+                mime=
+                    "text/csv",
+
+                use_container_width=
+                    True
+            )
