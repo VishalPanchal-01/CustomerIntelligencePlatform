@@ -1,0 +1,65 @@
+{
+    "module": "Customer Churn Prediction",
+    "explanation_method": "SHAP",
+    "sample_size": 300,
+    "example_customer_id": "14190.0",
+    "example_churn_probability": 0.9220201642461988,
+    "top_global_features": [
+        {
+            "Feature": "Recency",
+            "Mean Absolute SHAP": 0.11316655962881392,
+            "Importance Rank": 1
+        },
+        {
+            "Feature": "Frequency",
+            "Mean Absolute SHAP": 0.039134944940483175,
+            "Importance Rank": 2
+        },
+        {
+            "Feature": "TotalItems",
+            "Mean Absolute SHAP": 0.03826126240750282,
+            "Importance Rank": 3
+        },
+        {
+            "Feature": "Monetary",
+            "Mean Absolute SHAP": 0.03479519390845635,
+            "Importance Rank": 4
+        },
+        {
+            "Feature": "Tenure",
+            "Mean Absolute SHAP": 0.01624171915531634,
+            "Importance Rank": 5
+        },
+        {
+            "Feature": "AverageOrderValue",
+            "Mean Absolute SHAP": 0.008043176140707922,
+            "Importance Rank": 6
+        }
+    ],
+    "top_churn_drivers": [
+        {
+            "Feature": "Recency",
+            "Feature Value": 575.0,
+            "SHAP Value": 0.14274083463032475
+        },
+        {
+            "Feature": "Monetary",
+            "Feature Value": 79.9,
+            "SHAP Value": 0.05056816954268475
+        },
+        {
+            "Feature": "TotalItems",
+            "Feature Value": 2.0,
+            "SHAP Value": 0.044137904218483355
+        }
+    ],
+    "top_retention_drivers": [],
+    "artifacts": {
+        "global_importance": "artifacts\\explainability\\churn\\visualizations\\churn_global_feature_importance.png",
+        "beeswarm": "artifacts\\explainability\\churn\\visualizations\\churn_shap_beeswarm.png",
+        "customer_driver": "artifacts\\explainability\\churn\\visualizations\\example_customer_churn_drivers.png",
+        "customer_waterfall": "artifacts\\explainability\\churn\\visualizations\\example_customer_churn_waterfall.png",
+        "dashboard_shap_values": "artifacts\\explainability\\churn\\churn_dashboard_shap_values.csv"
+    },
+    "interpretation_note": "Positive SHAP values push the churn prediction upward relative to the model baseline. Negative values push it downward. SHAP explains model behavior and does not establish causality."
+}

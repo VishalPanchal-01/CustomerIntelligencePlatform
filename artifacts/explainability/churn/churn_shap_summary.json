@@ -1,0 +1,48 @@
+{
+    "module": "Customer Churn Prediction",
+    "explanation_method": "SHAP",
+    "target": "Churn",
+    "feature_columns": [
+        "Recency",
+        "Frequency",
+        "Monetary",
+        "TotalItems",
+        "AverageOrderValue",
+        "Tenure"
+    ],
+    "background_sample_size": 200,
+    "explained_sample_size": 500,
+    "top_global_features": [
+        {
+            "Feature": "Recency",
+            "Mean Absolute SHAP": 0.11320544986525703,
+            "Importance Rank": 1
+        },
+        {
+            "Feature": "Frequency",
+            "Mean Absolute SHAP": 0.03909000477339277,
+            "Importance Rank": 2
+        },
+        {
+            "Feature": "TotalItems",
+            "Mean Absolute SHAP": 0.03738130728206675,
+            "Importance Rank": 3
+        },
+        {
+            "Feature": "Monetary",
+            "Mean Absolute SHAP": 0.034915531996631985,
+            "Importance Rank": 4
+        },
+        {
+            "Feature": "Tenure",
+            "Mean Absolute SHAP": 0.016289042511817488,
+            "Importance Rank": 5
+        },
+        {
+            "Feature": "AverageOrderValue",
+            "Mean Absolute SHAP": 0.0077966228019365775,
+            "Importance Rank": 6
+        }
+    ],
+    "interpretation": "Positive SHAP values increase the model churn prediction. Negative SHAP values decrease the model churn prediction."
+}
