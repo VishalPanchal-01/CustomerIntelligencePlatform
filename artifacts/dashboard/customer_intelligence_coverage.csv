@@ -1,0 +1,8 @@
+Module,Module Field,Total Customers,Available Customers,Missing Customers,Coverage Percentage
+Segmentation,Customer Segment,5281,5281,0,100.0
+Churn,Churn Probability,5281,5281,0,100.0
+Churn,Churn Prediction,5281,5281,0,100.0
+Churn,Churn Risk,5281,5281,0,100.0
+CLV,Predicted 90-Day Revenue,5281,5281,0,100.0
+CLV,CLV Value Band,5281,5281,0,100.0
+Recommendation,Top Recommended Product,5281,5281,0,100.0

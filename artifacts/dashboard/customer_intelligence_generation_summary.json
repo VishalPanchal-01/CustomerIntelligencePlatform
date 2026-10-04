@@ -1,0 +1,15 @@
+{
+    "total_customers": 5281,
+    "churn": {
+        "customers": 5281,
+        "coverage_percentage": 100.0
+    },
+    "clv": {
+        "customers": 5281,
+        "coverage_percentage": 100.0
+    },
+    "recommendation": {
+        "customers": 5281,
+        "coverage_percentage": 100.0
+    }
+}
