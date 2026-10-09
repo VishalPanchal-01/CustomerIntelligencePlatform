@@ -26,3 +26,5 @@ black
 flake8
 
 openpyxl
+
+httpx2

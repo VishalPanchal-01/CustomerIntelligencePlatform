@@ -1,0 +1,338 @@
+{
+    "phase": "Phase 7 \u2014 FastAPI",
+    "status": "PASS",
+    "api": {
+        "title": "AI-Powered Customer Intelligence API",
+        "version": "1.5.0",
+        "docs_path": "/docs",
+        "openapi_path": "/openapi.json"
+    },
+    "artifact_validation": {
+        "customer_dataset": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\dashboard\\unified_customer_intelligence.csv",
+            "exists": true,
+            "size_bytes": 1920665
+        },
+        "churn_model": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\churn\\churn_model.pkl",
+            "exists": true,
+            "size_bytes": 1566073
+        },
+        "clv_model": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\clv\\clv_model.pkl",
+            "exists": true,
+            "size_bytes": 822892
+        },
+        "clv_value_bands": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\clv\\clv_value_bands.json",
+            "exists": true,
+            "size_bytes": 341
+        },
+        "recommendation_model": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\recommendation\\recommender.pkl",
+            "exists": true,
+            "size_bytes": 187161420
+        },
+        "recommendation_batch": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\recommendation\\predictions\\batch_recommendations.csv",
+            "exists": true,
+            "size_bytes": 3102788
+        },
+        "churn_global_shap": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\explainability\\churn\\churn_global_shap_importance.csv",
+            "exists": true,
+            "size_bytes": 246
+        },
+        "churn_local_shap": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\explainability\\churn\\churn_dashboard_shap_values.csv",
+            "exists": true,
+            "size_bytes": 173885
+        },
+        "clv_global_shap": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\explainability\\clv\\clv_global_shap_importance.csv",
+            "exists": true,
+            "size_bytes": 235
+        },
+        "clv_local_shap": {
+            "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\explainability\\clv\\clv_dashboard_shap_values.csv",
+            "exists": true,
+            "size_bytes": 168230
+        }
+    },
+    "service_status": {
+        "customer_service": {
+            "success": true,
+            "result": {
+                "available": true,
+                "rows": 5281,
+                "customers": 5281,
+                "columns": 20,
+                "path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\dashboard\\unified_customer_intelligence.csv"
+            }
+        },
+        "churn_service": {
+            "success": true,
+            "result": {
+                "available": true,
+                "loaded": false,
+                "model_path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\churn\\churn_model.pkl",
+                "feature_count": 6,
+                "features": [
+                    "Recency",
+                    "Frequency",
+                    "Monetary",
+                    "TotalItems",
+                    "AverageOrderValue",
+                    "Tenure"
+                ],
+                "decision_threshold": 0.5,
+                "low_risk_threshold": 0.3,
+                "high_risk_threshold": 0.7
+            }
+        },
+        "clv_service": {
+            "success": true,
+            "result": {
+                "model_available": true,
+                "model_loaded": false,
+                "value_bands_available": true,
+                "value_bands_loaded": false,
+                "model_path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\clv\\clv_model.pkl",
+                "value_bands_path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\clv\\clv_value_bands.json",
+                "feature_count": 6,
+                "features": [
+                    "Recency",
+                    "Frequency",
+                    "Monetary",
+                    "TotalItems",
+                    "AverageOrderValue",
+                    "Tenure"
+                ]
+            }
+        },
+        "recommendation_service": {
+            "success": true,
+            "result": {
+                "model_available": true,
+                "model_loaded": false,
+                "batch_predictions_available": true,
+                "batch_predictions_loaded": true,
+                "model_path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\models\\recommendation\\recommender.pkl",
+                "batch_predictions_path": "D:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\recommendation\\predictions\\batch_recommendations.csv",
+                "known_customers": 5281,
+                "cold_start_supported": false
+            }
+        },
+        "explainability_service": {
+            "success": true,
+            "result": {
+                "churn_global_available": true,
+                "churn_local_available": true,
+                "clv_global_available": true,
+                "clv_local_available": true,
+                "churn_explained_customers": 300,
+                "clv_explained_customers": 300
+            }
+        }
+    },
+    "route_validation": {
+        "all_present": true,
+        "routes": {
+            "GET /": true,
+            "GET /health": true,
+            "GET /data/status": true,
+            "GET /customers": true,
+            "GET /customers/{customer_id}": true,
+            "GET /customers/{customer_id}/summary": true,
+            "GET /models/churn/status": true,
+            "GET /models/clv/status": true,
+            "GET /models/recommendation/status": true,
+            "POST /predict/churn": true,
+            "POST /predict/clv": true,
+            "GET /recommend/{customer_id}": true,
+            "GET /explainability/status": true,
+            "GET /explain/global/churn": true,
+            "GET /explain/global/clv": true,
+            "GET /explain/churn/{customer_id}": true,
+            "GET /explain/clv/{customer_id}": true,
+            "GET /intelligence/{customer_id}": true
+        }
+    },
+    "registered_routes": [
+        {
+            "path": "/openapi.json",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        {
+            "path": "/docs",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        {
+            "path": "/docs/oauth2-redirect",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        {
+            "path": "/redoc",
+            "methods": [
+                "GET",
+                "HEAD"
+            ]
+        },
+        {
+            "path": "/",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/health",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/data/status",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/customers",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/customers/{customer_id}/summary",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/customers/{customer_id}",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/models/churn/status",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/models/clv/status",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/models/recommendation/status",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/explainability/status",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/predict/churn",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "path": "/predict/clv",
+            "methods": [
+                "POST"
+            ]
+        },
+        {
+            "path": "/recommend/{customer_id}",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/explain/global/churn",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/explain/global/clv",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/explain/churn/{customer_id}",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/explain/clv/{customer_id}",
+            "methods": [
+                "GET"
+            ]
+        },
+        {
+            "path": "/intelligence/{customer_id}",
+            "methods": [
+                "GET"
+            ]
+        }
+    ],
+    "openapi_validation": {
+        "valid": true,
+        "title": "AI-Powered Customer Intelligence API",
+        "version": "1.5.0",
+        "path_count": 18
+    },
+    "capabilities": {
+        "customer_lookup": true,
+        "customer_pagination": true,
+        "live_churn_prediction": true,
+        "live_clv_prediction": true,
+        "recommendation_lookup": true,
+        "global_shap_explainability": true,
+        "customer_shap_explainability": true,
+        "unified_customer_intelligence": true,
+        "swagger_documentation": true
+    },
+    "important_semantics": {
+        "customer_id_column": "Customer ID",
+        "clv_target": "Future 90-day revenue",
+        "clv_double_inverse_transform": false,
+        "recommendation_score": "Ranking signal, not calibrated purchase probability.",
+        "shap_interpretation": "Model contribution explanation, not causal inference.",
+        "business_priority": "Rule-based decision-support layer, not an additional ML model."
+    },
+    "known_limitations": [
+        "Customer-level SHAP explanations are currently available only for the precomputed explanation sample.",
+        "Cold-start recommendation capability depends on the selected persisted recommender and is not universally assumed.",
+        "The current development CORS configuration allows all origins and should be restricted for a real production deployment.",
+        "Authentication and authorization are not implemented in this portfolio API.",
+        "The API currently runs as a single service without an external production datastore."
+    ],
+    "validation_summary": {
+        "required_artifacts_exist": true,
+        "services_respond": true,
+        "required_routes_registered": true,
+        "openapi_valid": true,
+        "overall_status": "PASS"
+    }
+}
