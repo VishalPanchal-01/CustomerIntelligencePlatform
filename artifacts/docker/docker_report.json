@@ -1,0 +1,126 @@
+{
+    "phase": "Phase 8 \u2014 Docker",
+    "status": "PASS",
+    "image": {
+        "name": "customer-intelligence-api:latest",
+        "available": true,
+        "size_bytes": 2279594850,
+        "size_human": "2.12 GB"
+    },
+    "container": {
+        "name": "customer-intelligence-api-container",
+        "exists": true,
+        "running": true,
+        "health": "healthy",
+        "host_port": 8000,
+        "container_port": 8000
+    },
+    "environment": {
+        "python_version": "Python 3.12.15",
+        "working_directory": "/app",
+        "app_env": "production",
+        "python_unbuffered": "1"
+    },
+    "artifact_validation": {
+        "churn_model": {
+            "path": "/app/models/churn/churn_model.pkl",
+            "exists": true
+        },
+        "clv_model": {
+            "path": "/app/models/clv/clv_model.pkl",
+            "exists": true
+        },
+        "clv_value_bands": {
+            "path": "/app/models/clv/clv_value_bands.json",
+            "exists": true
+        },
+        "recommendation_model": {
+            "path": "/app/models/recommendation/recommender.pkl",
+            "exists": true
+        },
+        "customer_intelligence": {
+            "path": "/app/artifacts/dashboard/unified_customer_intelligence.csv",
+            "exists": true
+        },
+        "recommendation_batch": {
+            "path": "/app/artifacts/recommendation/predictions/batch_recommendations.csv",
+            "exists": true
+        },
+        "churn_global_shap": {
+            "path": "/app/artifacts/explainability/churn/churn_global_shap_importance.csv",
+            "exists": true
+        },
+        "churn_local_shap": {
+            "path": "/app/artifacts/explainability/churn/churn_dashboard_shap_values.csv",
+            "exists": true
+        },
+        "clv_global_shap": {
+            "path": "/app/artifacts/explainability/clv/clv_global_shap_importance.csv",
+            "exists": true
+        },
+        "clv_local_shap": {
+            "path": "/app/artifacts/explainability/clv/clv_dashboard_shap_values.csv",
+            "exists": true
+        }
+    },
+    "endpoint_validation": {
+        "/health": {
+            "url": "http://127.0.0.1:8000/health",
+            "success": true,
+            "status_code": 200,
+            "error": null
+        },
+        "/data/status": {
+            "url": "http://127.0.0.1:8000/data/status",
+            "success": true,
+            "status_code": 200,
+            "error": null
+        },
+        "/models/churn/status": {
+            "url": "http://127.0.0.1:8000/models/churn/status",
+            "success": true,
+            "status_code": 200,
+            "error": null
+        },
+        "/models/clv/status": {
+            "url": "http://127.0.0.1:8000/models/clv/status",
+            "success": true,
+            "status_code": 200,
+            "error": null
+        },
+        "/models/recommendation/status": {
+            "url": "http://127.0.0.1:8000/models/recommendation/status",
+            "success": true,
+            "status_code": 200,
+            "error": null
+        },
+        "/explainability/status": {
+            "url": "http://127.0.0.1:8000/explainability/status",
+            "success": true,
+            "status_code": 200,
+            "error": null
+        }
+    },
+    "deployment_configuration": {
+        "container_runtime": "Docker Desktop / Linux container",
+        "api_server": "Uvicorn",
+        "api_host": "0.0.0.0",
+        "health_endpoint": "/health",
+        "compose_supported": true
+    },
+    "known_considerations": [
+        "The current Docker image includes ML dependencies and model artifacts, so the image is expected to be larger than a basic FastAPI image.",
+        "The image should be rebuilt whenever application code, model artifacts, or Python dependencies change.",
+        "Pinned dependency versions are recommended for reproducible loading of persisted scikit-learn/XGBoost model artifacts.",
+        "The development CORS policy should be restricted before a public production deployment."
+    ],
+    "validation_summary": {
+        "image_available": true,
+        "container_exists": true,
+        "container_running": true,
+        "container_healthy": true,
+        "required_artifacts_present": true,
+        "core_endpoints_respond": true,
+        "overall_status": "PASS"
+    }
+}
