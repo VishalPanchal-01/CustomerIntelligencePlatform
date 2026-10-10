@@ -1,0 +1,22 @@
+{
+    "evaluation_strategy": "Temporal holdout based on latest full invoice.",
+    "benchmark_role": "Development and model-selection benchmark.",
+    "untouched_final_test_set": false,
+    "important_limitation": "Recommendation evaluation uses the temporal benchmark for model comparison and selection. It should not be described as an untouched final recommendation test set.",
+    "default_top_k": 10,
+    "model_count": 3,
+    "selected_model": "Item-Based Collaborative Filtering",
+    "metrics": [
+        "precision_at_k",
+        "recall_at_k",
+        "catalog_coverage"
+    ],
+    "selection_priority": [
+        "Recall@K",
+        "HitRate@K",
+        "Precision@K",
+        "CatalogCoverage"
+    ],
+    "recommendation_score_meaning": "Ranking signal, not a calibrated probability.",
+    "cold_start_limitation": "Cold-start support depends on the persisted recommendation implementation and is not assumed to be universal."
+}

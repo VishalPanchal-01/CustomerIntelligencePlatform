@@ -1,0 +1,88 @@
+{
+    "phase": "Phase 9 \u2014 MLflow",
+    "status": "REVIEW_REQUIRED",
+    "tracking_uri": "sqlite:///D:/Machine Learning Projects/Customer Intelligence Platform/mlflow.db",
+    "experiments": {
+        "Customer Churn Prediction": {
+            "experiment_name": "Customer Churn Prediction",
+            "exists": true,
+            "experiment_id": "1",
+            "artifact_location": "file:D:/Machine Learning Projects/Customer Intelligence Platform/mlruns/1",
+            "run_count": 0,
+            "finished_run_count": 0,
+            "failed_run_count": 0,
+            "production_run_expected": "Churn - Final Production Model",
+            "production_run_present": false,
+            "status": "REVIEW_REQUIRED"
+        },
+        "90-Day Revenue Prediction": {
+            "experiment_name": "90-Day Revenue Prediction",
+            "exists": true,
+            "experiment_id": "2",
+            "artifact_location": "file:D:/Machine Learning Projects/Customer Intelligence Platform/mlruns/2",
+            "run_count": 0,
+            "finished_run_count": 0,
+            "failed_run_count": 0,
+            "production_run_expected": "CLV - Final Production Model",
+            "production_run_present": false,
+            "status": "REVIEW_REQUIRED"
+        },
+        "Next Product Recommendation": {
+            "experiment_name": "Next Product Recommendation",
+            "exists": true,
+            "experiment_id": "3",
+            "artifact_location": "file:D:/Machine Learning Projects/Customer Intelligence Platform/mlruns/3",
+            "run_count": 0,
+            "finished_run_count": 0,
+            "failed_run_count": 0,
+            "production_run_expected": "Recommendation - Final Production Model",
+            "production_run_present": false,
+            "status": "REVIEW_REQUIRED"
+        }
+    },
+    "validation_summary": {
+        "expected_experiment_count": 3,
+        "all_experiments_exist": true,
+        "all_experiments_have_runs": false,
+        "all_production_runs_present": false,
+        "total_failed_runs": 0,
+        "overall_status": "REVIEW_REQUIRED"
+    },
+    "project_tracking_design": {
+        "churn": {
+            "task": "binary classification",
+            "main_metrics": [
+                "Precision",
+                "Recall",
+                "F1",
+                "ROC-AUC"
+            ]
+        },
+        "clv": {
+            "task": "90-day revenue regression",
+            "main_metrics": [
+                "MAE",
+                "RMSE",
+                "R2"
+            ],
+            "target_transform": "log1p",
+            "prediction_scale": "original revenue scale"
+        },
+        "recommendation": {
+            "task": "top-N recommendation",
+            "main_metrics": [
+                "Precision@K",
+                "Recall@K",
+                "HitRate@K",
+                "CatalogCoverage"
+            ],
+            "evaluation": "temporal holdout"
+        }
+    },
+    "known_limitations": [
+        "Recommendation temporal evaluation was used for development and model selection and should not be described as an untouched final test set.",
+        "Recommendation scores are ranking signals rather than calibrated purchase probabilities.",
+        "CLV represents predicted future 90-day revenue rather than literal customer lifetime value.",
+        "Local SHAP explanations are based on a precomputed customer sample."
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "customer_id_column": "Customer ID",
+    "target": "FutureRevenue",
+    "target_meaning": "Future gross positive purchase revenue over the next 90 days.",
+    "business_label": "Predicted 90-Day Revenue",
+    "features": [
+        "Recency",
+        "Frequency",
+        "Monetary",
+        "TotalItems",
+        "AverageOrderValue",
+        "Tenure"
+    ],
+    "feature_count": 6,
+    "target_transformation": "log1p",
+    "inverse_transformation": "expm1",
+    "prediction_scale": "Original revenue scale returned directly by model.predict()."
+}

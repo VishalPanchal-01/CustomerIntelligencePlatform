@@ -30,3 +30,7 @@ mlflow.db
 mlflow.db-shm
 mlflow.db-wal
 mlartifacts/
+
+# MLflow local tracking data
+mlruns/
+mlruns_backup/
