@@ -105,3 +105,10 @@ artifacts/clv/customer_clv_dataset.csv
 
 *.tmp
 *.temp
+
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
+mlartifacts/
+
+mlruns/

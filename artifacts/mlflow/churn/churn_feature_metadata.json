@@ -1,0 +1,17 @@
+{
+    "customer_id_column": "Customer ID",
+    "target": "Churn",
+    "target_meaning": {
+        "0": "Customer purchased in future window.",
+        "1": "Customer did not purchase in future window."
+    },
+    "features": [
+        "Recency",
+        "Frequency",
+        "Monetary",
+        "TotalItems",
+        "AverageOrderValue",
+        "Tenure"
+    ],
+    "feature_count": 6
+}
