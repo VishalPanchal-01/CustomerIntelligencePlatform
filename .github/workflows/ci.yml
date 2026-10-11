@@ -1,0 +1,561 @@
+name: Customer Intelligence CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+
+# ============================================================
+# GLOBAL PERMISSIONS
+# ============================================================
+
+permissions:
+  contents: read
+
+
+# ============================================================
+# CONCURRENCY
+# ============================================================
+
+concurrency:
+  group: customer-intelligence-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+
+# ============================================================
+# GLOBAL ENVIRONMENT
+# ============================================================
+
+env:
+  PYTHON_VERSION: "3.12"
+  PYTHONPATH: "."
+  DOCKER_IMAGE_NAME: customer-intelligence-api
+  CI_CONTAINER_NAME: customer-intelligence-api-ci
+
+
+jobs:
+
+  # ==========================================================
+  # JOB 1 — PYTHON QUALITY + TESTING
+  # ==========================================================
+
+  python-validation:
+
+    name: Python Validation
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 30
+
+
+    steps:
+
+      # -------------------------------------------------------
+      # CHECKOUT
+      # -------------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+
+      - name: Pull Git LFS files
+        run: |
+          git lfs pull
+
+
+      # -------------------------------------------------------
+      # PYTHON
+      # -------------------------------------------------------
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+
+      - name: Display Python information
+        run: |
+          python --version
+          python -m pip --version
+
+
+      # -------------------------------------------------------
+      # DEPENDENCIES
+      # -------------------------------------------------------
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install -r requirements.txt
+
+
+      # -------------------------------------------------------
+      # DEPENDENCY CONSISTENCY
+      # -------------------------------------------------------
+
+      - name: Check installed dependencies
+        run: |
+          python -m pip check
+
+
+      # -------------------------------------------------------
+      # CI REPORT DIRECTORY
+      # -------------------------------------------------------
+
+      - name: Create CI report directory
+        run: |
+          mkdir -p artifacts/ci
+
+
+      # -------------------------------------------------------
+      # PYTEST
+      # -------------------------------------------------------
+
+      - name: Run automated tests
+        run: |
+          python -m pytest \
+            -v \
+            --junitxml=artifacts/ci/pytest-results.xml
+
+
+      # -------------------------------------------------------
+      # PROJECT VALIDATION
+      # -------------------------------------------------------
+
+      - name: Run project validation
+        run: |
+          python ci_validate.py
+
+
+      # -------------------------------------------------------
+      # UPLOAD PYTHON REPORTS
+      # -------------------------------------------------------
+
+      - name: Upload Python CI reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-ci-reports
+          path: |
+            artifacts/ci/
+          if-no-files-found: warn
+          retention-days: 14
+
+
+  # ==========================================================
+  # JOB 2 — SECURITY CHECKS
+  # ==========================================================
+
+  dependency-security:
+
+    name: Dependency Security
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+
+    steps:
+
+      # -------------------------------------------------------
+      # CHECKOUT
+      # -------------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # -------------------------------------------------------
+      # PYTHON
+      # -------------------------------------------------------
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+
+      # -------------------------------------------------------
+      # INSTALL SECURITY TOOL
+      # -------------------------------------------------------
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pip-audit
+
+
+      # -------------------------------------------------------
+      # CREATE REPORT DIRECTORY
+      # -------------------------------------------------------
+
+      - name: Create security report directory
+        run: |
+          mkdir -p artifacts/ci
+
+
+      # -------------------------------------------------------
+      # SECURITY AUDIT
+      #
+      # Advisory initially:
+      # vulnerabilities are reported, but this step will not
+      # block the entire CI pipeline while the project is being
+      # stabilized.
+      # -------------------------------------------------------
+
+      - name: Run dependency security audit
+        continue-on-error: true
+        run: |
+          python -m pip_audit \
+            -r requirements.txt \
+            --format json \
+            --output artifacts/ci/pip-audit.json
+
+
+      # -------------------------------------------------------
+      # HUMAN-READABLE AUDIT
+      # -------------------------------------------------------
+
+      - name: Display dependency audit
+        continue-on-error: true
+        run: |
+          python -m pip_audit \
+            -r requirements.txt
+
+
+      # -------------------------------------------------------
+      # UPLOAD SECURITY REPORT
+      # -------------------------------------------------------
+
+      - name: Upload security report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-security-report
+          path: |
+            artifacts/ci/pip-audit.json
+          if-no-files-found: warn
+          retention-days: 14
+
+
+  # ==========================================================
+  # JOB 3 — DOCKER BUILD + HEALTH VALIDATION
+  # ==========================================================
+
+  docker-validation:
+
+    name: Docker Build and API Health
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 45
+
+    needs:
+      - python-validation
+
+
+    steps:
+
+      # -------------------------------------------------------
+      # CHECKOUT
+      # -------------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+
+      - name: Pull Git LFS files
+        run: |
+          git lfs pull
+
+
+      # -------------------------------------------------------
+      # DOCKER BUILDX
+      # -------------------------------------------------------
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+
+      # -------------------------------------------------------
+      # BUILD WITH GITHUB ACTIONS CACHE
+      # -------------------------------------------------------
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+      # -------------------------------------------------------
+      # CREATE REPORT DIRECTORY
+      # -------------------------------------------------------
+
+      - name: Create Docker report directory
+        run: |
+          mkdir -p artifacts/ci
+
+
+      # -------------------------------------------------------
+      # IMAGE INSPECTION
+      # -------------------------------------------------------
+
+      - name: Inspect Docker image
+        run: |
+          docker image inspect \
+            ${{ env.DOCKER_IMAGE_NAME }}:ci \
+            > artifacts/ci/docker-image-inspect.json
+
+
+      # -------------------------------------------------------
+      # START CONTAINER
+      # -------------------------------------------------------
+
+      - name: Start API container
+        run: |
+          docker run \
+            -d \
+            --name ${{ env.CI_CONTAINER_NAME }} \
+            -p 8000:8000 \
+            ${{ env.DOCKER_IMAGE_NAME }}:ci
+
+
+      # -------------------------------------------------------
+      # WAIT FOR API
+      # -------------------------------------------------------
+
+      - name: Wait for FastAPI health
+        shell: bash
+        run: |
+          echo "Waiting for Customer Intelligence API..."
+
+          for i in {1..30}
+          do
+
+            if curl \
+              --fail \
+              --silent \
+              http://127.0.0.1:8000/health
+            then
+
+              echo ""
+              echo "API is healthy."
+              exit 0
+
+            fi
+
+            echo "Attempt ${i}/30 - API not ready."
+
+            sleep 5
+
+          done
+
+          echo ""
+          echo "API failed to become healthy."
+
+          docker logs \
+            ${{ env.CI_CONTAINER_NAME }}
+
+          exit 1
+
+
+      # -------------------------------------------------------
+      # DOCKER HEALTH
+      # -------------------------------------------------------
+
+      - name: Validate Docker health status
+        shell: bash
+        run: |
+          for i in {1..20}
+          do
+
+            STATUS=$(
+              docker inspect \
+                --format='{{.State.Health.Status}}' \
+                ${{ env.CI_CONTAINER_NAME }}
+            )
+
+            echo "Docker health status: ${STATUS}"
+
+            if [ "${STATUS}" = "healthy" ]
+            then
+
+              exit 0
+
+            fi
+
+            if [ "${STATUS}" = "unhealthy" ]
+            then
+
+              docker logs \
+                ${{ env.CI_CONTAINER_NAME }}
+
+              exit 1
+
+            fi
+
+            sleep 5
+
+          done
+
+          echo "Docker health check timed out."
+
+          docker logs \
+            ${{ env.CI_CONTAINER_NAME }}
+
+          exit 1
+
+
+      # -------------------------------------------------------
+      # HEALTH ENDPOINT
+      # -------------------------------------------------------
+
+      - name: Validate health endpoint
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/health
+
+
+      # -------------------------------------------------------
+      # DATA STATUS
+      # -------------------------------------------------------
+
+      - name: Validate data status endpoint
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/data/status
+
+
+      # -------------------------------------------------------
+      # MODEL STATUS ENDPOINTS
+      # -------------------------------------------------------
+
+      - name: Validate churn model status
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/models/churn/status
+
+
+      - name: Validate CLV model status
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/models/clv/status
+
+
+      - name: Validate recommendation model status
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/models/recommendation/status
+
+
+      # -------------------------------------------------------
+      # EXPLAINABILITY STATUS
+      # -------------------------------------------------------
+
+      - name: Validate explainability status
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/explainability/status
+
+
+      # -------------------------------------------------------
+      # OPENAPI
+      # -------------------------------------------------------
+
+      - name: Download OpenAPI schema
+        run: |
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/openapi.json \
+            --output artifacts/ci/openapi.json
+
+
+      # -------------------------------------------------------
+      # CONTAINER INSPECTION
+      # -------------------------------------------------------
+
+      - name: Save container inspection
+        if: always()
+        run: |
+          docker inspect \
+            ${{ env.CI_CONTAINER_NAME }} \
+            > artifacts/ci/docker-container-inspect.json \
+            || true
+
+
+      # -------------------------------------------------------
+      # SAVE CONTAINER LOG
+      # -------------------------------------------------------
+
+      - name: Save container logs
+        if: always()
+        run: |
+          docker logs \
+            ${{ env.CI_CONTAINER_NAME }} \
+            > artifacts/ci/docker-container.log \
+            2>&1 \
+            || true
+
+
+      # -------------------------------------------------------
+      # UPLOAD DOCKER REPORTS
+      # -------------------------------------------------------
+
+      - name: Upload Docker CI reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-ci-reports
+          path: |
+            artifacts/ci/
+          if-no-files-found: warn
+          retention-days: 14
+
+
+      # -------------------------------------------------------
+      # CLEANUP
+      # -------------------------------------------------------
+
+      - name: Remove CI container
+        if: always()
+        run: |
+          docker rm \
+            -f \
+            ${{ env.CI_CONTAINER_NAME }} \
+            || true

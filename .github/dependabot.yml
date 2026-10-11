@@ -1,0 +1,72 @@
+version: 2
+
+updates:
+
+  # ==========================================================
+  # PYTHON DEPENDENCIES
+  # ==========================================================
+
+  - package-ecosystem: "pip"
+
+    directory: "/"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+
+    open-pull-requests-limit: 5
+
+    labels:
+      - "dependencies"
+      - "python"
+
+    groups:
+
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+
+  # ==========================================================
+  # GITHUB ACTIONS
+  # ==========================================================
+
+  - package-ecosystem: "github-actions"
+
+    directory: "/"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+
+    open-pull-requests-limit: 5
+
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+    groups:
+
+      github-actions-updates:
+        patterns:
+          - "*"
+
+
+  # ==========================================================
+  # DOCKER
+  # ==========================================================
+
+  - package-ecosystem: "docker"
+
+    directory: "/"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+
+    open-pull-requests-limit: 5
+
+    labels:
+      - "dependencies"
+      - "docker"
