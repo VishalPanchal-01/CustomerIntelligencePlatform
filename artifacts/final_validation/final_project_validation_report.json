@@ -1,0 +1,153 @@
+{
+    "project": "AI-Powered Customer Intelligence Platform",
+    "overall_status": "REVIEW_REQUIRED",
+    "validations": {
+        "directories": {
+            "success": true,
+            "items": {
+                "api": true,
+                "dashboard": true,
+                "src": true,
+                "models": true,
+                "artifacts": true,
+                "tests": true
+            }
+        },
+        "root_files": {
+            "success": true,
+            "items": {
+                "README.md": true,
+                "requirements.txt": true,
+                "Dockerfile": true,
+                "docker-compose.yml": true,
+                ".dockerignore": true,
+                ".gitignore": true,
+                "ci_validate.py": true
+            }
+        },
+        "api_files": {
+            "success": true,
+            "items": {
+                "api/main.py": true,
+                "api/schemas.py": true,
+                "api/customer_service.py": true,
+                "api/churn_service.py": true,
+                "api/clv_service.py": true,
+                "api/recommendation_service.py": true,
+                "api/explainability_service.py": true,
+                "api/intelligence_service.py": true
+            }
+        },
+        "model_artifacts": {
+            "success": true,
+            "items": {
+                "models/churn/churn_model.pkl": true,
+                "models/clv/clv_model.pkl": true,
+                "models/clv/clv_value_bands.json": true,
+                "models/recommendation/recommender.pkl": true,
+                "models/recommendation/recommender_metadata.json": true
+            }
+        },
+        "business_artifacts": {
+            "success": true,
+            "items": {
+                "artifacts/dashboard/unified_customer_intelligence.csv": true,
+                "artifacts/recommendation/predictions/batch_recommendations.csv": true
+            }
+        },
+        "mlflow_files": {
+            "success": true,
+            "items": {
+                "src/mlflow_tracking/__init__.py": true,
+                "src/mlflow_tracking/config.py": true,
+                "src/mlflow_tracking/tracker.py": true,
+                "src/mlflow_tracking/churn_tracking.py": true,
+                "src/mlflow_tracking/clv_tracking.py": true,
+                "src/mlflow_tracking/recommendation_tracking.py": true,
+                "src/mlflow_tracking/mlflow_validation.py": true
+            }
+        },
+        "github_files": {
+            "success": true,
+            "items": {
+                ".github/workflows/ci.yml": true,
+                ".github/workflows/cd.yml": true,
+                ".github/workflows/release.yml": true,
+                ".github/dependabot.yml": true
+            }
+        },
+        "python": {
+            "success": true,
+            "version": "Python 3.12.7"
+        },
+        "requirements": {
+            "success": false,
+            "packages": {
+                "pandas": true,
+                "numpy": true,
+                "scikit-learn": true,
+                "fastapi": true,
+                "uvicorn": true,
+                "pydantic": true,
+                "joblib": false,
+                "mlflow": true,
+                "shap": true
+            }
+        },
+        "gitignore": {
+            "success": true,
+            "checks": {
+                ".venv": true,
+                "__pycache__": true,
+                ".env": true,
+                "mlruns": true
+            }
+        },
+        "dockerignore": {
+            "success": true,
+            "checks": {
+                ".venv": true,
+                ".git": true,
+                "notebooks": true,
+                "mlruns": true,
+                "data": true
+            }
+        },
+        "readme": {
+            "success": true,
+            "checks": {
+                "churn": true,
+                "segmentation": true,
+                "customer value": true,
+                "recommendation": true,
+                "shap": true,
+                "fastapi": true,
+                "docker": true,
+                "mlflow": true,
+                "ci/cd": true
+            }
+        },
+        "pytest": {
+            "success": true,
+            "return_code": 0,
+            "stdout": "........................................................................ [ 21%]\n........................................................................ [ 42%]\n........................................................................ [ 64%]\n........................................................................ [ 85%]\n................................................                         [100%]\n============================== warnings summary ===============================\n.venv\\Lib\\site-packages\\shap\\plots\\colors\\_colors.py:47\n  D:\\Machine Learning Projects\\Customer Intelligence Platform\\.venv\\Lib\\site-packages\\shap\\plots\\colors\\_colors.py:47: PendingDeprecationWarning: The set_bad function will be deprecated in a future version. Use cmap.with_extremes(bad=...) or Colormap(bad=...) instead.\n    red_blue.set_bad(gray_rgb.tolist(), 1.0)\n\n.venv\\Lib\\site-packages\\shap\\plots\\colors\\_colors.py:48\n  D:\\Machine Learning Projects\\Customer Intelligence Platform\\.venv\\Lib\\site-packages\\shap\\plots\\colors\\_colors.py:48: PendingDeprecationWarning: The set_over function will be deprecated in a future version. Use cmap.with_extremes(over=...) or Colormap(over=...) instead.\n    red_blue.set_over(gray_rgb.tolist(), 1.0)\n\n.venv\\Lib\\site-packages\\shap\\plots\\colors\\_colors.py:49\n  D:\\Machine Learning Projects\\Customer Intelligence Platform\\.venv\\Lib\\site-packages\\shap\\plots\\colors\\_colors.py:49: PendingDeprecationWarning: The set_under function will be deprecated in a future version. Use cmap.with_extremes(under=...) or Colormap(under=...) instead.\n    red_blue.set_under(gray_rgb.tolist(), 1.0)  # \"under\" is incorrectly used instead of \"bad\" in the scatter plot\n\ntests/test_recommendation_temporal_split.py::test_recommendation_temporal_split\n  D:\\Machine Learning Projects\\Customer Intelligence Platform\\src\\evaluation\\recommendation_temporal_split.py:290: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n    .fillna(False)\n\ntests/test_visualization.py::test_plot_monthly_revenue\ntests/test_visualization.py::test_plot_monthly_revenue\ntests/test_visualization.py::test_plot_monthly_orders\ntests/test_visualization.py::test_plot_monthly_orders\ntests/test_visualization.py::test_plot_monthly_customers\ntests/test_visualization.py::test_plot_monthly_customers\n  D:\\Machine Learning Projects\\Customer Intelligence Platform\\.venv\\Lib\\site-packages\\pandas\\plotting\\_matplotlib\\converter.py:1063: MatplotlibDeprecationWarning: The locs attribute was deprecated in Matplotlib 3.11 and will be removed in 3.13.\n    self.locs: list[Any] = []  # unused, for matplotlib compat\n\ntests/test_visualization.py: 102 warnings\n  D:\\Machine Learning Projects\\Customer Intelligence Platform\\.venv\\Lib\\site-packages\\pandas\\plotting\\_matplotlib\\converter.py:1087: MatplotlibDeprecationWarning: The locs attribute was deprecated in Matplotlib 3.11 and will be removed in 3.13.\n    self.locs = locs\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n336 passed, 112 warnings in 171.97s (0:02:51)",
+            "stderr": ""
+        },
+        "ci_validation": {
+            "success": true,
+            "return_code": 0,
+            "stdout": "========================================\nCI PROJECT VALIDATION\n========================================\n\ndirectories: PASS\nsource_files: PASS\nproduction_artifacts: PASS\nimports: PASS\nfastapi: PASS\nopenapi: PASS\nmlflow: PASS\ndockerfile: PASS\n\nOverall Status:\nPASS\n\nReport saved:\nD:\\Machine Learning Projects\\Customer Intelligence Platform\\artifacts\\ci\\ci_validation_report.json\n\nCI validation passed.",
+            "stderr": ""
+        },
+        "git_status": {
+            "success": false,
+            "clean": false,
+            "changes": "M visualize_customer_segments.py\n?? final_project_validation.py"
+        },
+        "git_lfs": {
+            "success": true,
+            "files": "",
+            "error": ""
+        }
+    }
+}
