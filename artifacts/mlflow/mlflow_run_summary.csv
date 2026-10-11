@@ -1,1 +1,11 @@
-
+Experiment,Experiment ID,Run ID,Run Name,Status
+Customer Churn Prediction,1,4c45960368ec42c78c4abebd9c0b436e,Churn - Final Production Model,FINISHED
+Customer Churn Prediction,1,412ab795d76648ec8e1b41ab85a20b93,Churn - Random Forest,FINISHED
+Customer Churn Prediction,1,058509ce4f214c0c8fe8631aa142a1b4,Churn - Logistic Regression,FINISHED
+90-Day Revenue Prediction,2,9f7c8a31f4cd42b28cfe951d0c1295f6,CLV - Final Production Model,FINISHED
+90-Day Revenue Prediction,2,1a065c781e3e470bb5057aa19d4a06f4,CLV - Random Forest,FINISHED
+90-Day Revenue Prediction,2,807c28c21a0947099ce3ba5ebddca70f,CLV - Linear Regression,FINISHED
+Next Product Recommendation,3,13974bc7f19748be89ddbcf7afcd1da7,Recommendation - Final Production Model,FINISHED
+Next Product Recommendation,3,4e6f9e4815ea4aa9a3d525ebb5d04baf,Recommendation - Popularity Baseline,FINISHED
+Next Product Recommendation,3,aa1adb4847f44f068a24c4d2040a6111,Recommendation - Matrix Factorization,FINISHED
+Next Product Recommendation,3,a51d67e0acd849078688443e286b0bd3,Recommendation - Item-Based Collaborative Filtering,FINISHED

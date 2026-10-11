@@ -5,19 +5,23 @@ import mlflow
 import numpy as np
 
 from src.mlflow_tracking.config import (
-    MLFLOW_TRACKING_URI
+    MLFLOW_TRACKING_URI,
 )
 
 
+# ============================================================
+# MLFLOW TRACKER
+# ============================================================
+
 class MLflowTracker:
 
-    # =========================================================
+    # ========================================================
     # INITIALIZATION
-    # =========================================================
+    # ========================================================
 
     def __init__(
         self,
-        experiment_name: str
+        experiment_name: str,
     ):
 
         self.experiment_name = (
@@ -29,42 +33,40 @@ class MLflowTracker:
         )
 
         mlflow.set_experiment(
-            experiment_name
+            self.experiment_name
         )
 
-
-    # =========================================================
+    # ========================================================
     # CLEAN VALUE
-    # =========================================================
+    # ========================================================
 
     @staticmethod
     def clean_value(
-        value: Any
-    ):
+        value: Any,
+    ) -> Any:
 
         if isinstance(
             value,
             (
                 np.integer,
-                np.floating
-            )
+                np.floating,
+            ),
         ):
 
             return value.item()
 
         return value
 
-
-    # =========================================================
+    # ========================================================
     # LOG PARAMETERS
-    # =========================================================
+    # ========================================================
 
     def log_params(
         self,
-        params: dict
+        params: dict,
     ) -> None:
 
-        cleaned = {}
+        cleaned_params = {}
 
         for key, value in (
             params.items()
@@ -74,30 +76,29 @@ class MLflowTracker:
 
                 continue
 
-            cleaned[
+            cleaned_params[
                 str(key)
             ] = self.clean_value(
                 value
             )
 
-        if cleaned:
+        if cleaned_params:
 
             mlflow.log_params(
-                cleaned
+                cleaned_params
             )
 
-
-    # =========================================================
+    # ========================================================
     # LOG METRICS
-    # =========================================================
+    # ========================================================
 
     def log_metrics(
         self,
         metrics: dict,
-        step: int | None = None
+        step: int | None = None,
     ) -> None:
 
-        cleaned = {}
+        cleaned_metrics = {}
 
         for key, value in (
             metrics.items()
@@ -115,7 +116,7 @@ class MLflowTracker:
 
             except (
                 TypeError,
-                ValueError
+                ValueError,
             ):
 
                 continue
@@ -126,28 +127,27 @@ class MLflowTracker:
 
                 continue
 
-            cleaned[
+            cleaned_metrics[
                 str(key)
             ] = numeric_value
 
-        if cleaned:
+        if cleaned_metrics:
 
             mlflow.log_metrics(
-                cleaned,
-                step=step
+                cleaned_metrics,
+                step=step,
             )
 
-
-    # =========================================================
+    # ========================================================
     # LOG TAGS
-    # =========================================================
+    # ========================================================
 
     def log_tags(
         self,
-        tags: dict
+        tags: dict,
     ) -> None:
 
-        cleaned = {}
+        cleaned_tags = {}
 
         for key, value in (
             tags.items()
@@ -157,67 +157,64 @@ class MLflowTracker:
 
                 continue
 
-            cleaned[
+            cleaned_tags[
                 str(key)
             ] = str(
                 value
             )
 
-        if cleaned:
+        if cleaned_tags:
 
             mlflow.set_tags(
-                cleaned
+                cleaned_tags
             )
 
-
-    # =========================================================
-    # LOG ARTIFACT
-    # =========================================================
+    # ========================================================
+    # LOG SINGLE ARTIFACT
+    # ========================================================
 
     @staticmethod
     def log_artifact(
         path: str,
-        artifact_path: str | None = None
+        artifact_path: str | None = None,
     ) -> None:
 
         mlflow.log_artifact(
             path,
             artifact_path=
-                artifact_path
+                artifact_path,
         )
 
-
-    # =========================================================
-    # LOG ARTIFACTS DIRECTORY
-    # =========================================================
+    # ========================================================
+    # LOG ARTIFACT DIRECTORY
+    # ========================================================
 
     @staticmethod
     def log_artifacts(
         directory: str,
-        artifact_path: str | None = None
+        artifact_path: str | None = None,
     ) -> None:
 
         mlflow.log_artifacts(
             directory,
             artifact_path=
-                artifact_path
+                artifact_path,
         )
 
-
-    # =========================================================
-    # ACTIVE RUN
-    # =========================================================
+    # ========================================================
+    # START RUN
+    # ========================================================
 
     @contextmanager
     def start_run(
         self,
         run_name: str | None = None,
-        tags: dict | None = None
+        tags: dict | None = None,
     ):
 
         with mlflow.start_run(
             run_name=
-                run_name
+                run_name,
         ) as run:
 
             if tags:
@@ -228,13 +225,12 @@ class MLflowTracker:
 
             yield run
 
-
-    # =========================================================
-    # TRACKING INFORMATION
-    # =========================================================
+    # ========================================================
+    # TRACKING INFO
+    # ========================================================
 
     def tracking_info(
-        self
+        self,
     ) -> dict:
 
         experiment = (
@@ -244,7 +240,6 @@ class MLflowTracker:
         )
 
         return {
-
             "tracking_uri":
                 mlflow.get_tracking_uri(),
 
@@ -263,5 +258,5 @@ class MLflowTracker:
                     experiment.artifact_location
                     if experiment
                     else None
-                )
+                ),
         }

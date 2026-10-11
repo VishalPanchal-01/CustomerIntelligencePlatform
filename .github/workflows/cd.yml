@@ -1,0 +1,613 @@
+name: Customer Intelligence CD
+
+
+# ============================================================
+# TRIGGERS
+# ============================================================
+
+on:
+
+  # ----------------------------------------------------------
+  # Publish whenever main receives a successful code change.
+  # ----------------------------------------------------------
+
+  push:
+
+    branches:
+      - main
+
+    tags:
+      - "v*"
+
+
+  # ----------------------------------------------------------
+  # Allow manual publishing from GitHub Actions.
+  # ----------------------------------------------------------
+
+  workflow_dispatch:
+
+
+# ============================================================
+# PERMISSIONS
+# ============================================================
+
+permissions:
+
+  contents: read
+
+  packages: write
+
+
+# ============================================================
+# CONCURRENCY
+# ============================================================
+
+concurrency:
+
+  group: customer-intelligence-cd-${{ github.ref }}
+
+  cancel-in-progress: false
+
+
+# ============================================================
+# GLOBAL VARIABLES
+# ============================================================
+
+env:
+
+  REGISTRY: ghcr.io
+
+  DOCKERFILE_PATH: ./Dockerfile
+
+
+# ============================================================
+# JOBS
+# ============================================================
+
+jobs:
+
+  # ==========================================================
+  # JOB 1 — VALIDATE BEFORE PUBLISHING
+  # ==========================================================
+
+  validate:
+
+    name: Pre-Publish Validation
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 30
+
+
+    steps:
+
+      # -------------------------------------------------------
+      # CHECKOUT
+      # -------------------------------------------------------
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+        with:
+
+          lfs: true
+
+
+      # -------------------------------------------------------
+      # GIT LFS
+      # -------------------------------------------------------
+
+      - name: Pull Git LFS files
+
+        run: |
+
+          git lfs pull
+
+
+      # -------------------------------------------------------
+      # PYTHON
+      # -------------------------------------------------------
+
+      - name: Set up Python
+
+        uses: actions/setup-python@v5
+
+        with:
+
+          python-version: "3.12"
+
+          cache: pip
+
+
+      # -------------------------------------------------------
+      # INSTALL DEPENDENCIES
+      # -------------------------------------------------------
+
+      - name: Install dependencies
+
+        run: |
+
+          python -m pip install --upgrade pip
+
+          python -m pip install -r requirements.txt
+
+
+      # -------------------------------------------------------
+      # DEPENDENCY VALIDATION
+      # -------------------------------------------------------
+
+      - name: Validate dependencies
+
+        run: |
+
+          python -m pip check
+
+
+      # -------------------------------------------------------
+      # RUN TEST SUITE
+      # -------------------------------------------------------
+
+      - name: Run tests
+
+        run: |
+
+          python -m pytest -v
+
+
+      # -------------------------------------------------------
+      # PROJECT VALIDATION
+      # -------------------------------------------------------
+
+      - name: Run project validation
+
+        run: |
+
+          python ci_validate.py
+
+
+  # ==========================================================
+  # JOB 2 — BUILD AND PUBLISH IMAGE
+  # ==========================================================
+
+  publish-image:
+
+    name: Publish Docker Image
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 45
+
+    needs:
+      - validate
+
+
+    steps:
+
+      # -------------------------------------------------------
+      # CHECKOUT
+      # -------------------------------------------------------
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+        with:
+
+          lfs: true
+
+
+      # -------------------------------------------------------
+      # GIT LFS
+      # -------------------------------------------------------
+
+      - name: Pull Git LFS files
+
+        run: |
+
+          git lfs pull
+
+
+      # -------------------------------------------------------
+      # NORMALIZE GHCR IMAGE NAME
+      #
+      # Docker image references must be lowercase.
+      # -------------------------------------------------------
+
+      - name: Configure image name
+
+        shell: bash
+
+        run: |
+
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+
+          echo "IMAGE_NAME=ghcr.io/${OWNER}/customer-intelligence-api" \
+            >> "${GITHUB_ENV}"
+
+          echo "Publishing image namespace for owner: ${OWNER}"
+
+
+      # -------------------------------------------------------
+      # DOCKER BUILDX
+      # -------------------------------------------------------
+
+      - name: Set up Docker Buildx
+
+        uses: docker/setup-buildx-action@v3
+
+
+      # -------------------------------------------------------
+      # LOGIN TO GITHUB CONTAINER REGISTRY
+      # -------------------------------------------------------
+
+      - name: Login to GitHub Container Registry
+
+        uses: docker/login-action@v3
+
+        with:
+
+          registry: ${{ env.REGISTRY }}
+
+          username: ${{ github.actor }}
+
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+
+      # -------------------------------------------------------
+      # DOCKER METADATA / TAGGING
+      # -------------------------------------------------------
+
+      - name: Extract Docker metadata
+
+        id: metadata
+
+        uses: docker/metadata-action@v5
+
+        with:
+
+          images: ${{ env.IMAGE_NAME }}
+
+          tags: |
+
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+            type=sha,prefix=sha-
+
+            type=ref,event=tag
+
+
+      # -------------------------------------------------------
+      # BUILD AND PUSH
+      # -------------------------------------------------------
+
+      - name: Build and push Docker image
+
+        uses: docker/build-push-action@v6
+
+        with:
+
+          context: .
+
+          file: ${{ env.DOCKERFILE_PATH }}
+
+          push: true
+
+          tags: ${{ steps.metadata.outputs.tags }}
+
+          labels: ${{ steps.metadata.outputs.labels }}
+
+          cache-from: type=gha
+
+          cache-to: type=gha,mode=max
+
+          provenance: true
+
+
+      # -------------------------------------------------------
+      # OUTPUT IMAGE INFORMATION
+      # -------------------------------------------------------
+
+      - name: Display published image
+
+        shell: bash
+
+        run: |
+
+          echo "========================================"
+
+          echo "Docker image published successfully"
+
+          echo "========================================"
+
+          echo ""
+
+          echo "Image:"
+
+          echo "${IMAGE_NAME}"
+
+          echo ""
+
+          echo "Tags:"
+
+          echo "${{ steps.metadata.outputs.tags }}"
+
+
+  # ==========================================================
+  # JOB 3 — VERIFY PUBLISHED IMAGE
+  # ==========================================================
+
+  verify-published-image:
+
+    name: Verify Published Image
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 20
+
+    needs:
+      - publish-image
+
+
+    steps:
+
+      # -------------------------------------------------------
+      # NORMALIZE IMAGE NAME
+      # -------------------------------------------------------
+
+      - name: Configure image name
+
+        shell: bash
+
+        run: |
+
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+
+          echo "IMAGE_NAME=ghcr.io/${OWNER}/customer-intelligence-api" \
+            >> "${GITHUB_ENV}"
+
+
+      # -------------------------------------------------------
+      # LOGIN
+      # -------------------------------------------------------
+
+      - name: Login to GitHub Container Registry
+
+        uses: docker/login-action@v3
+
+        with:
+
+          registry: ${{ env.REGISTRY }}
+
+          username: ${{ github.actor }}
+
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+
+      # -------------------------------------------------------
+      # DETERMINE IMAGE TAG
+      # -------------------------------------------------------
+
+      - name: Determine verification tag
+
+        shell: bash
+
+        run: |
+
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]
+          then
+
+            TAG="${GITHUB_REF#refs/tags/}"
+
+          else
+
+            TAG="latest"
+
+          fi
+
+          echo "VERIFY_TAG=${TAG}" \
+            >> "${GITHUB_ENV}"
+
+          echo "Verification tag: ${TAG}"
+
+
+      # -------------------------------------------------------
+      # PULL PUBLISHED IMAGE
+      # -------------------------------------------------------
+
+      - name: Pull published image
+
+        shell: bash
+
+        run: |
+
+          docker pull \
+            "${IMAGE_NAME}:${VERIFY_TAG}"
+
+
+      # -------------------------------------------------------
+      # START CONTAINER
+      # -------------------------------------------------------
+
+      - name: Start published image
+
+        shell: bash
+
+        run: |
+
+          docker run \
+            -d \
+            --name customer-intelligence-release-test \
+            -p 8000:8000 \
+            "${IMAGE_NAME}:${VERIFY_TAG}"
+
+
+      # -------------------------------------------------------
+      # WAIT FOR HEALTH ENDPOINT
+      # -------------------------------------------------------
+
+      - name: Wait for published API
+
+        shell: bash
+
+        run: |
+
+          echo "Waiting for published image..."
+
+          for i in {1..30}
+          do
+
+            if curl \
+              --fail \
+              --silent \
+              http://127.0.0.1:8000/health
+            then
+
+              echo ""
+
+              echo "Published API is healthy."
+
+              exit 0
+
+            fi
+
+            echo "Attempt ${i}/30"
+
+            sleep 5
+
+          done
+
+          echo "Published image failed health validation."
+
+          docker logs \
+            customer-intelligence-release-test
+
+          exit 1
+
+
+      # -------------------------------------------------------
+      # VERIFY DOCKER HEALTH
+      # -------------------------------------------------------
+
+      - name: Validate container health
+
+        shell: bash
+
+        run: |
+
+          for i in {1..20}
+          do
+
+            STATUS=$(
+
+              docker inspect \
+                --format='{{.State.Health.Status}}' \
+                customer-intelligence-release-test
+
+            )
+
+            echo "Container health: ${STATUS}"
+
+            if [ "${STATUS}" = "healthy" ]
+            then
+
+              exit 0
+
+            fi
+
+            if [ "${STATUS}" = "unhealthy" ]
+            then
+
+              docker logs \
+                customer-intelligence-release-test
+
+              exit 1
+
+            fi
+
+            sleep 5
+
+          done
+
+          echo "Container health validation timed out."
+
+          docker logs \
+            customer-intelligence-release-test
+
+          exit 1
+
+
+      # -------------------------------------------------------
+      # VERIFY OPENAPI
+      # -------------------------------------------------------
+
+      - name: Validate published OpenAPI
+
+        run: |
+
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/openapi.json \
+            --output openapi.json
+
+
+      # -------------------------------------------------------
+      # VERIFY MODEL STATUS
+      # -------------------------------------------------------
+
+      - name: Validate published model endpoints
+
+        shell: bash
+
+        run: |
+
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/models/churn/status
+
+          echo ""
+
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/models/clv/status
+
+          echo ""
+
+          curl \
+            --fail \
+            --show-error \
+            http://127.0.0.1:8000/models/recommendation/status
+
+
+      # -------------------------------------------------------
+      # LOGS ON FAILURE
+      # -------------------------------------------------------
+
+      - name: Show container logs
+
+        if: failure()
+
+        run: |
+
+          docker logs \
+            customer-intelligence-release-test \
+            || true
+
+
+      # -------------------------------------------------------
+      # CLEANUP
+      # -------------------------------------------------------
+
+      - name: Cleanup verification container
+
+        if: always()
+
+        run: |
+
+          docker rm \
+            -f \
+            customer-intelligence-release-test \
+            || true

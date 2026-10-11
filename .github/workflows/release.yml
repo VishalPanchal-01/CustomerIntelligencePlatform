@@ -1,0 +1,69 @@
+name: Release Validation
+
+
+# ============================================================
+# TRIGGER
+# ============================================================
+
+on:
+
+  push:
+
+    tags:
+      - "v*"
+
+
+permissions:
+
+  contents: read
+
+
+jobs:
+
+  validate-release-tag:
+
+    name: Validate Release Tag
+
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+      # -------------------------------------------------------
+      # CHECKOUT
+      # -------------------------------------------------------
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      # -------------------------------------------------------
+      # VALIDATE SEMVER-LIKE TAG
+      # -------------------------------------------------------
+
+      - name: Validate version tag
+
+        shell: bash
+
+        run: |
+
+          TAG="${GITHUB_REF#refs/tags/}"
+
+          echo "Release tag: ${TAG}"
+
+          if [[ ! "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          then
+
+            echo ""
+            echo "Invalid release tag."
+            echo ""
+            echo "Expected format:"
+            echo "v1.0.0"
+
+            exit 1
+
+          fi
+
+          echo ""
+          echo "Release tag is valid."

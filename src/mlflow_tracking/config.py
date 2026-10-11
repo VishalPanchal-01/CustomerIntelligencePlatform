@@ -14,12 +14,29 @@ PROJECT_ROOT = (
 
 
 # ============================================================
-# MLFLOW DATABASE
+# MLFLOW STORAGE
 # ============================================================
 
-MLFLOW_DB_PATH = (
+MLRUNS_DIR = (
+    PROJECT_ROOT
+    / "mlruns"
+)
+
+MLFLOW_DATABASE_PATH = (
     PROJECT_ROOT
     / "mlflow.db"
+)
+
+
+# ============================================================
+# DEFAULT SQLITE TRACKING URI
+# ============================================================
+
+DEFAULT_MLFLOW_TRACKING_URI = (
+    "sqlite:///"
+    + MLFLOW_DATABASE_PATH
+    .resolve()
+    .as_posix()
 )
 
 
@@ -27,25 +44,11 @@ MLFLOW_DB_PATH = (
 # TRACKING URI
 # ============================================================
 
-DEFAULT_TRACKING_URI = (
-    f"sqlite:///{MLFLOW_DB_PATH.as_posix()}"
-)
-
 MLFLOW_TRACKING_URI = (
     os.getenv(
         "MLFLOW_TRACKING_URI",
-        DEFAULT_TRACKING_URI
+        DEFAULT_MLFLOW_TRACKING_URI,
     )
-)
-
-
-# ============================================================
-# ARTIFACT DIRECTORY
-# ============================================================
-
-MLFLOW_ARTIFACT_DIR = (
-    PROJECT_ROOT
-    / "mlartifacts"
 )
 
 

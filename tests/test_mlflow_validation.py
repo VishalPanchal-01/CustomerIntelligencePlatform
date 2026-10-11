@@ -16,7 +16,29 @@ from src.mlflow_tracking.mlflow_validation import (
 
 
 # ============================================================
-# EXPECTED EXPERIMENT CONFIGURATION
+# TEMPORARY SQLITE URI
+# ============================================================
+
+def create_test_tracking_uri(
+    tmp_path: Path,
+) -> str:
+
+    database_path = (
+        tmp_path
+        / "mlflow_test.db"
+    )
+
+    return (
+        "sqlite:///"
+        +
+        database_path
+        .resolve()
+        .as_posix()
+    )
+
+
+# ============================================================
+# EXPECTED EXPERIMENTS
 # ============================================================
 
 def test_expected_experiments():
@@ -38,7 +60,7 @@ def test_expected_experiments():
 
 
 # ============================================================
-# EXPECTED PRODUCTION RUN NAMES
+# EXPECTED PRODUCTION RUNS
 # ============================================================
 
 def test_expected_production_runs():
@@ -76,25 +98,17 @@ def test_validator_initialization(
     tmp_path: Path,
 ):
 
-    tracking_directory = (
-        tmp_path
-        / "mlruns"
-    )
-
-    tracking_directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
     tracking_uri = (
-        tracking_directory
-        .resolve()
-        .as_uri()
+        create_test_tracking_uri(
+            tmp_path
+        )
     )
 
-    validator = MLflowValidation(
-        tracking_uri=
-            tracking_uri
+    validator = (
+        MLflowValidation(
+            tracking_uri=
+                tracking_uri
+        )
     )
 
     assert (
@@ -110,32 +124,24 @@ def test_validator_initialization(
 
 
 # ============================================================
-# MISSING EXPERIMENT HANDLING
+# MISSING EXPERIMENT
 # ============================================================
 
 def test_missing_experiment(
     tmp_path: Path,
 ):
 
-    tracking_directory = (
-        tmp_path
-        / "mlruns"
-    )
-
-    tracking_directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
     tracking_uri = (
-        tracking_directory
-        .resolve()
-        .as_uri()
+        create_test_tracking_uri(
+            tmp_path
+        )
     )
 
-    validator = MLflowValidation(
-        tracking_uri=
-            tracking_uri
+    validator = (
+        MLflowValidation(
+            tracking_uri=
+                tracking_uri
+        )
     )
 
     result = (
@@ -169,27 +175,17 @@ def test_missing_experiment(
 
 
 # ============================================================
-# EXPERIMENT WITH RUN
+# EXPERIMENT WITH FINISHED RUN
 # ============================================================
 
 def test_experiment_with_finished_run(
     tmp_path: Path,
 ):
 
-    tracking_directory = (
-        tmp_path
-        / "mlruns"
-    )
-
-    tracking_directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
     tracking_uri = (
-        tracking_directory
-        .resolve()
-        .as_uri()
+        create_test_tracking_uri(
+            tmp_path
+        )
     )
 
     mlflow.set_tracking_uri(
@@ -209,6 +205,7 @@ def test_experiment_with_finished_run(
     with mlflow.start_run(
         experiment_id=
             experiment_id,
+
         run_name=
             "CI Test Run",
     ):
@@ -223,9 +220,11 @@ def test_experiment_with_finished_run(
             0.95,
         )
 
-    validator = MLflowValidation(
-        tracking_uri=
-            tracking_uri
+    validator = (
+        MLflowValidation(
+            tracking_uri=
+                tracking_uri
+        )
     )
 
     experiment = (
@@ -239,13 +238,19 @@ def test_experiment_with_finished_run(
         is not None
     )
 
-    runs = validator.get_runs(
-        experiment.experiment_id
+    runs = (
+        validator.get_runs(
+            experiment.experiment_id
+        )
     )
 
-    assert len(
-        runs
-    ) == 1
+    assert (
+        len(
+            runs
+        )
+        ==
+        1
+    )
 
     assert (
         validator.finished_run_count(
@@ -261,4 +266,95 @@ def test_experiment_with_finished_run(
         )
         ==
         0
+    )
+
+
+# ============================================================
+# PRODUCTION RUN DETECTION
+# ============================================================
+
+def test_production_run_detection(
+    tmp_path: Path,
+):
+
+    tracking_uri = (
+        create_test_tracking_uri(
+            tmp_path
+        )
+    )
+
+    mlflow.set_tracking_uri(
+        tracking_uri
+    )
+
+    experiment_name = (
+        CHURN_EXPERIMENT
+    )
+
+    experiment_id = (
+        mlflow.create_experiment(
+            experiment_name
+        )
+    )
+
+    expected_run_name = (
+        EXPECTED_PRODUCTION_RUNS[
+            CHURN_EXPERIMENT
+        ]
+    )
+
+    with mlflow.start_run(
+        experiment_id=
+            experiment_id,
+
+        run_name=
+            expected_run_name,
+    ):
+
+        mlflow.log_param(
+            "model_stage",
+            "production",
+        )
+
+    validator = (
+        MLflowValidation(
+            tracking_uri=
+                tracking_uri
+        )
+    )
+
+    result = (
+        validator.validate_experiment(
+            CHURN_EXPERIMENT
+        )
+    )
+
+    assert (
+        result[
+            "exists"
+        ]
+        is True
+    )
+
+    assert (
+        result[
+            "run_count"
+        ]
+        ==
+        1
+    )
+
+    assert (
+        result[
+            "production_run_present"
+        ]
+        is True
+    )
+
+    assert (
+        result[
+            "status"
+        ]
+        ==
+        "PASS"
     )
