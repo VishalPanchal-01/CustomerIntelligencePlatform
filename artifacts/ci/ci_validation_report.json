@@ -1,0 +1,164 @@
+{
+    "directories": {
+        "success": true,
+        "directories": {
+            "api": true,
+            "src": true,
+            "models": true,
+            "artifacts": true
+        }
+    },
+    "source_files": {
+        "success": true,
+        "files": {
+            "api\\main.py": true,
+            "api\\schemas.py": true,
+            "api\\customer_service.py": true,
+            "api\\churn_service.py": true,
+            "api\\clv_service.py": true,
+            "api\\recommendation_service.py": true,
+            "api\\explainability_service.py": true,
+            "api\\intelligence_service.py": true,
+            "Dockerfile": true,
+            "requirements.txt": true
+        }
+    },
+    "production_artifacts": {
+        "success": true,
+        "artifacts": {
+            "churn_model": {
+                "exists": true,
+                "path": "models\\churn\\churn_model.pkl"
+            },
+            "clv_model": {
+                "exists": true,
+                "path": "models\\clv\\clv_model.pkl"
+            },
+            "clv_value_bands": {
+                "exists": true,
+                "path": "models\\clv\\clv_value_bands.json"
+            },
+            "recommendation_model": {
+                "exists": true,
+                "path": "models\\recommendation\\recommender.pkl"
+            },
+            "recommendation_metadata": {
+                "exists": true,
+                "path": "models\\recommendation\\recommender_metadata.json"
+            },
+            "unified_customer_intelligence": {
+                "exists": true,
+                "path": "artifacts\\dashboard\\unified_customer_intelligence.csv"
+            },
+            "recommendation_batch": {
+                "exists": true,
+                "path": "artifacts\\recommendation\\predictions\\batch_recommendations.csv"
+            }
+        }
+    },
+    "imports": {
+        "success": true,
+        "modules": {
+            "api.main": {
+                "success": true,
+                "error": null
+            },
+            "api.schemas": {
+                "success": true,
+                "error": null
+            },
+            "api.customer_service": {
+                "success": true,
+                "error": null
+            },
+            "api.churn_service": {
+                "success": true,
+                "error": null
+            },
+            "api.clv_service": {
+                "success": true,
+                "error": null
+            },
+            "api.recommendation_service": {
+                "success": true,
+                "error": null
+            },
+            "api.explainability_service": {
+                "success": true,
+                "error": null
+            },
+            "api.intelligence_service": {
+                "success": true,
+                "error": null
+            }
+        }
+    },
+    "fastapi": {
+        "success": true,
+        "registered_route_count": 22,
+        "registered_routes": [
+            "/",
+            "/customers",
+            "/customers/{customer_id}",
+            "/customers/{customer_id}/summary",
+            "/data/status",
+            "/docs",
+            "/docs/oauth2-redirect",
+            "/explain/churn/{customer_id}",
+            "/explain/clv/{customer_id}",
+            "/explain/global/churn",
+            "/explain/global/clv",
+            "/explainability/status",
+            "/health",
+            "/intelligence/{customer_id}",
+            "/models/churn/status",
+            "/models/clv/status",
+            "/models/recommendation/status",
+            "/openapi.json",
+            "/predict/churn",
+            "/predict/clv",
+            "/recommend/{customer_id}",
+            "/redoc"
+        ],
+        "missing_routes": []
+    },
+    "openapi": {
+        "success": true,
+        "detail": "OpenAPI schema generated successfully."
+    },
+    "mlflow": {
+        "success": true,
+        "modules": {
+            "src.mlflow_tracking.config": {
+                "success": true,
+                "error": null
+            },
+            "src.mlflow_tracking.tracker": {
+                "success": true,
+                "error": null
+            },
+            "src.mlflow_tracking.churn_tracking": {
+                "success": true,
+                "error": null
+            },
+            "src.mlflow_tracking.clv_tracking": {
+                "success": true,
+                "error": null
+            },
+            "src.mlflow_tracking.recommendation_tracking": {
+                "success": true,
+                "error": null
+            },
+            "src.mlflow_tracking.mlflow_validation": {
+                "success": true,
+                "error": null
+            }
+        }
+    },
+    "dockerfile": {
+        "success": true,
+        "detail": "Dockerfile structure looks valid.",
+        "missing": []
+    },
+    "overall_status": "PASS"
+}
